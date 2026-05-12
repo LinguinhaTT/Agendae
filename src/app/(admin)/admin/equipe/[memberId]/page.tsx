@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AvailabilityManager } from "@/components/admin/availability-manager";
-import { getAdminContext } from "@/lib/data/admin";
+import { ProfessionalServicesManager } from "@/components/admin/professional-services-manager";
+import { getAdminContext, getServicesAdmin } from "@/lib/data/admin";
 import { getMemberWithAvailability } from "@/lib/data/team";
 
 interface Props {
@@ -20,15 +21,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function MemberAvailabilityPage({ params }: Props) {
   const { memberId } = await params;
   const { establishment } = await getAdminContext();
-  const data = await getMemberWithAvailability(memberId, establishment.id);
+  const [data, allServices] = await Promise.all([
+    getMemberWithAvailability(memberId, establishment.id),
+    getServicesAdmin(establishment.id),
+  ]);
 
   if (!data) notFound();
 
-  const { member, rules, timeOffs } = data;
+  const { member, rules, timeOffs, linkedServiceIds } = data;
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      {/* Back link */}
       <Link
         href="/admin/equipe"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
@@ -37,7 +40,6 @@ export default async function MemberAvailabilityPage({ params }: Props) {
         Equipe
       </Link>
 
-      {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
           <span className="text-lg font-bold text-primary">
@@ -46,9 +48,23 @@ export default async function MemberAvailabilityPage({ params }: Props) {
         </div>
         <div>
           <h1 className="text-2xl font-black">{member.display_name}</h1>
-          <p className="text-sm text-muted-foreground">Disponibilidade e folgas</p>
+          <p className="text-sm text-muted-foreground">Disponibilidade, serviços e folgas</p>
         </div>
       </div>
+
+      {/* Serviços que este profissional realiza */}
+      <section className="mb-8">
+        <h2 className="text-lg font-bold mb-1">Serviços</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Selecione quais serviços este profissional realiza. Se nenhum for selecionado, ele aparece
+          em todos.
+        </p>
+        <ProfessionalServicesManager
+          professionalId={memberId}
+          allServices={allServices}
+          initialLinkedIds={linkedServiceIds}
+        />
+      </section>
 
       <AvailabilityManager
         memberId={memberId}

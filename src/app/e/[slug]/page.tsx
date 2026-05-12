@@ -98,7 +98,16 @@ export default async function EstablishmentPage({ params }: Props) {
 
   if (!data) notFound();
 
-  const { establishment, members, services, portfolio, reviews, avgRating, totalReviews } = data;
+  const {
+    establishment,
+    members,
+    services,
+    portfolio,
+    reviews,
+    avgRating,
+    totalReviews,
+    workingHours,
+  } = data;
 
   const categoryLabel =
     ESTABLISHMENT_CATEGORIES.find((c) => c.value === establishment.category)?.label ??
@@ -376,6 +385,33 @@ export default async function EstablishmentPage({ params }: Props) {
                     )}
                   </div>
                 ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* Working Hours */}
+        {workingHours.length > 0 && (
+          <>
+            <Separator className="mb-10" />
+            <section className="mb-16">
+              <h2 className="text-lg font-bold mb-4">Horário de funcionamento</h2>
+              <div className="rounded-xl border border-white/5 divide-y divide-white/5">
+                {workingHours.map(({ weekday, start_time, end_time }) => {
+                  const label =
+                    ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][weekday] ?? weekday;
+                  return (
+                    <div
+                      key={weekday}
+                      className="flex items-center justify-between px-4 py-2.5 text-sm"
+                    >
+                      <span className="text-muted-foreground w-10">{label}</span>
+                      <span className="font-medium">
+                        {start_time} – {end_time}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           </>

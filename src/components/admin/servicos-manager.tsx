@@ -73,7 +73,7 @@ export function ServicosManager({ initialServices }: Props) {
     setError(null);
   }
 
-  function field(key: keyof FormState) {
+  function field(key: keyof Omit<FormState, "price_on_quote">) {
     return {
       value: form[key],
       onChange: (

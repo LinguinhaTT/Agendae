@@ -706,16 +706,17 @@ export function BookingWizard({
               </div>
 
               {/* Day headers */}
-              <div className="grid grid-cols-7 mb-2">
+              <div className="grid grid-cols-7 mb-1">
                 {DAY_NAMES.map((d) => (
                   <p key={d} className="text-center text-xs text-muted-foreground font-medium py-1">
-                    {d}
+                    <span className="hidden sm:inline">{d}</span>
+                    <span className="sm:hidden">{d.charAt(0)}</span>
                   </p>
                 ))}
               </div>
 
               {/* Days */}
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
                 {buildCalendarDays(state.calYear, state.calMonth).map(({ key, day }) => {
                   if (!day) return <div key={key} />;
                   const dateStr = toDateStr(state.calYear, state.calMonth, day);
@@ -733,7 +734,7 @@ export function BookingWizard({
                       disabled={isPast || (!state.datesLoading && !isAvailable)}
                       onClick={() => handleSelectDate(dateStr)}
                       className={cn(
-                        "aspect-square rounded-lg text-sm font-medium transition-all",
+                        "aspect-square rounded-lg text-xs sm:text-sm font-medium transition-all",
                         isSelected
                           ? "bg-primary text-primary-foreground"
                           : isAvailable
@@ -761,7 +762,7 @@ export function BookingWizard({
                 </p>
 
                 {state.slotsLoading && (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     {[0, 1, 2, 3, 4, 5, 6, 7].map((n) => (
                       <div key={n} className="h-10 rounded-lg bg-white/5 animate-pulse" />
                     ))}
@@ -775,7 +776,7 @@ export function BookingWizard({
                 )}
 
                 {!state.slotsLoading && state.slots.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     {state.slots.map((slot) => (
                       <button
                         key={slot.startsAt}

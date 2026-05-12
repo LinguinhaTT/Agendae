@@ -3,6 +3,7 @@
 import {
   Calendar,
   ExternalLink,
+  ImageIcon,
   LayoutDashboard,
   LogOut,
   Scissors,
@@ -19,6 +20,7 @@ const NAV = [
   { href: "/admin/agenda", label: "Agenda", icon: Calendar, exact: false },
   { href: "/admin/servicos", label: "Serviços", icon: Scissors, exact: false },
   { href: "/admin/equipe", label: "Equipe", icon: Users, exact: false },
+  { href: "/admin/portfolio", label: "Portfólio", icon: ImageIcon, exact: false },
   { href: "/admin/configuracoes", label: "Configurações", icon: Settings, exact: false },
 ];
 

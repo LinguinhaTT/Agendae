@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AgendaDateFilter } from "@/components/admin/agenda-date-filter";
 import { AppointmentActions } from "@/components/admin/appointment-actions";
 import { APPOINTMENT_STATUS_LABELS } from "@/lib/constants";
 import { getAdminContext, getAppointmentsAdmin } from "@/lib/data/admin";
-import { formatCurrency, formatDuration } from "@/lib/utils";
+import { formatDuration, formatPrice } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Agenda" };
 
 interface Props {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; date?: string }>;
 }
 
 const STATUS_TABS = [
@@ -29,17 +30,30 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default async function AgendaPage({ searchParams }: Props) {
-  const { status = "all" } = await searchParams;
+  const { status = "all", date } = await searchParams;
   const { establishment } = await getAdminContext();
-  const appointments = await getAppointmentsAdmin(establishment.id, status);
+  const appointments = await getAppointmentsAdmin(establishment.id, status, date);
+
+  function tabHref(value: string) {
+    const params = new URLSearchParams();
+    if (value !== "all") params.set("status", value);
+    if (date) params.set("date", date);
+    const qs = params.toString();
+    return `/admin/agenda${qs ? `?${qs}` : ""}`;
+  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-black">Agenda</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {appointments.length} agendamento{appointments.length !== 1 ? "s" : ""}
-        </p>
+      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-black">Agenda</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {appointments.length} agendamento{appointments.length !== 1 ? "s" : ""}
+            {date &&
+              ` em ${new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "long" })}`}
+          </p>
+        </div>
+        <AgendaDateFilter currentDate={date} currentStatus={status} />
       </div>
 
       {/* Status tabs */}
@@ -47,7 +61,7 @@ export default async function AgendaPage({ searchParams }: Props) {
         {STATUS_TABS.map(({ value, label }) => (
           <Link
             key={value}
-            href={value === "all" ? "/admin/agenda" : `/admin/agenda?status=${value}`}
+            href={tabHref(value)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               status === value || (value === "all" && !status)
                 ? "bg-primary/10 text-primary"
@@ -85,10 +99,7 @@ export default async function AgendaPage({ searchParams }: Props) {
                       {start.toLocaleDateString("pt-BR", { day: "2-digit" })}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {start.toLocaleTimeString("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {start.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
 
@@ -106,15 +117,8 @@ export default async function AgendaPage({ searchParams }: Props) {
                     <p className="text-sm text-muted-foreground mt-0.5">
                       {appt.service_name_snapshot} ·{" "}
                       {formatDuration(appt.duration_minutes_snapshot)} ·{" "}
-                      {start.toLocaleTimeString("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}{" "}
-                      –{" "}
-                      {end.toLocaleTimeString("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {start.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} –{" "}
+                      {end.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </p>
 
                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-xs text-muted-foreground">
@@ -134,7 +138,7 @@ export default async function AgendaPage({ searchParams }: Props) {
                   {/* Price */}
                   <div className="shrink-0 text-right">
                     <p className="font-bold text-primary">
-                      {formatCurrency(appt.price_cents_snapshot)}
+                      {formatPrice(appt.price_cents_snapshot)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5 capitalize">
                       {start.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}

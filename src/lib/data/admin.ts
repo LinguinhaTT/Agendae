@@ -95,7 +95,8 @@ export async function getDashboardData(establishmentId: string) {
 
 export async function getAppointmentsAdmin(
   establishmentId: string,
-  statusFilter?: string
+  statusFilter?: string,
+  dateFilter?: string // "YYYY-MM-DD"
 ): Promise<AdminAppointment[]> {
   const supabase = await createClient();
 
@@ -106,8 +107,8 @@ export async function getAppointmentsAdmin(
         "service_name_snapshot, price_cents_snapshot, duration_minutes_snapshot, status, created_at, professional_id"
     )
     .eq("establishment_id", establishmentId)
-    .order("starts_at", { ascending: false })
-    .limit(100);
+    .order("starts_at", { ascending: !!dateFilter })
+    .limit(200);
 
   if (statusFilter && statusFilter !== "all") {
     query = query.eq(
@@ -120,6 +121,12 @@ export async function getAppointmentsAdmin(
         | "completed"
         | "rescheduled"
     );
+  }
+
+  if (dateFilter) {
+    const dayStart = `${dateFilter}T00:00:00.000Z`;
+    const dayEnd = `${dateFilter}T23:59:59.999Z`;
+    query = query.gte("starts_at", dayStart).lte("starts_at", dayEnd);
   }
 
   const { data } = await query;

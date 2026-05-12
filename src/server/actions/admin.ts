@@ -192,6 +192,102 @@ export async function deleteService(serviceId: string): Promise<Result<void, str
   return { ok: true, data: undefined };
 }
 
+// ─── Professional services ────────────────────────────────────────────────────
+
+export async function setProfessionalServices(
+  professionalId: string,
+  serviceIds: string[]
+): Promise<Result<void, string>> {
+  const { supabase, establishmentId } = await getAuth();
+
+  // Verify professional belongs to this establishment
+  const { data: member } = await supabase
+    .from("establishment_members")
+    .select("id")
+    .eq("id", professionalId)
+    .eq("establishment_id", establishmentId)
+    .maybeSingle();
+
+  if (!member) return { ok: false, error: "Profissional não encontrado." };
+
+  // Delete all current links and re-insert selected ones
+  await supabase.from("professional_services").delete().eq("professional_id", professionalId);
+
+  if (serviceIds.length > 0) {
+    const { error } = await supabase
+      .from("professional_services")
+      .insert(serviceIds.map((sid) => ({ professional_id: professionalId, service_id: sid })));
+    if (error) return { ok: false, error: error.message };
+  }
+
+  revalidatePath(`/admin/equipe/${professionalId}`);
+  return { ok: true, data: undefined };
+}
+
+// ─── Portfolio ────────────────────────────────────────────────────────────────
+
+export async function addPortfolioItem(
+  imageUrl: string,
+  title?: string
+): Promise<Result<{ id: string }, string>> {
+  const { supabase, establishmentId } = await getAuth();
+
+  const { data, error } = await supabase
+    .from("portfolio_items")
+    .insert({ establishment_id: establishmentId, image_url: imageUrl, title: title ?? null })
+    .select("id")
+    .single();
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/portfolio");
+  revalidatePath(`/e`);
+  return { ok: true, data: { id: data.id } };
+}
+
+export async function deletePortfolioItem(itemId: string): Promise<void> {
+  const { supabase, establishmentId } = await getAuth();
+
+  await supabase
+    .from("portfolio_items")
+    .delete()
+    .eq("id", itemId)
+    .eq("establishment_id", establishmentId);
+
+  revalidatePath("/admin/portfolio");
+}
+
+export async function toggleFeaturedPortfolio(itemId: string, isFeatured: boolean): Promise<void> {
+  const { supabase, establishmentId } = await getAuth();
+
+  await supabase
+    .from("portfolio_items")
+    .update({ is_featured: isFeatured })
+    .eq("id", itemId)
+    .eq("establishment_id", establishmentId);
+
+  revalidatePath("/admin/portfolio");
+}
+
+// ─── Establishment logo/cover ──────────────────────────────────────────────────
+
+export async function updateEstablishmentImages(
+  logoUrl: string | null,
+  coverUrl: string | null
+): Promise<Result<void, string>> {
+  const { supabase, establishmentId } = await getAuth();
+
+  const { error } = await supabase
+    .from("establishments")
+    .update({ logo_url: logoUrl, cover_url: coverUrl })
+    .eq("id", establishmentId);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/configuracoes");
+  return { ok: true, data: undefined };
+}
+
 // ─── Establishment settings ───────────────────────────────────────────────────
 
 const settingsSchema = z.object({

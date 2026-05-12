@@ -18,7 +18,7 @@ export async function getTeamMembers(establishmentId: string): Promise<TeamMembe
 export async function getMemberWithAvailability(memberId: string, establishmentId: string) {
   const supabase = await createClient();
 
-  const [memberRes, rulesRes, timeOffRes] = await Promise.all([
+  const [memberRes, rulesRes, timeOffRes, profServicesRes] = await Promise.all([
     supabase
       .from("establishment_members")
       .select("*")
@@ -38,6 +38,8 @@ export async function getMemberWithAvailability(memberId: string, establishmentI
       .eq("professional_id", memberId)
       .gte("ends_at", new Date().toISOString())
       .order("starts_at"),
+
+    supabase.from("professional_services").select("service_id").eq("professional_id", memberId),
   ]);
 
   if (!memberRes.data) return null;
@@ -46,5 +48,6 @@ export async function getMemberWithAvailability(memberId: string, establishmentI
     member: memberRes.data as TeamMember,
     rules: (rulesRes.data ?? []) as AvailabilityRule[],
     timeOffs: (timeOffRes.data ?? []) as TimeOff[],
+    linkedServiceIds: (profServicesRes.data ?? []).map((r) => r.service_id),
   };
 }

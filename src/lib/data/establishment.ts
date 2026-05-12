@@ -30,12 +30,19 @@ export type PublicReview = Pick<
   "id" | "rating" | "comment" | "owner_response" | "owner_responded_at" | "created_at"
 > & { client_name?: string };
 
+export interface WorkingHours {
+  weekday: number;
+  start_time: string;
+  end_time: string;
+}
+
 export interface EstablishmentPageData {
   establishment: PublicEstablishment;
   members: PublicMember[];
   services: PublicService[];
   portfolio: PublicPortfolioItem[];
   reviews: PublicReview[];
+  workingHours: WorkingHours[];
   avgRating: number;
   totalReviews: number;
 }
@@ -84,10 +91,40 @@ export async function getEstablishmentBySlug(slug: string): Promise<Establishmen
       .limit(20),
   ]);
 
+  // Fetch working hours using member IDs already retrieved
+  const memberIds = (membersResult.data ?? []).map((m) => m.id);
+  const hoursResult =
+    memberIds.length > 0
+      ? await supabase
+          .from("availability_rules")
+          .select("weekday, start_time, end_time")
+          .eq("is_active", true)
+          .in("professional_id", memberIds)
+      : { data: [] };
+
   const reviews = (reviewsResult.data ?? []) as PublicReview[];
   const totalReviews = reviews.length;
   const avgRating =
     totalReviews > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews : 0;
+
+  // Aggregate: earliest start and latest end per weekday
+  const byWeekday = new Map<number, { start: string; end: string }>();
+  for (const rule of hoursResult.data ?? []) {
+    const existing = byWeekday.get(rule.weekday);
+    if (!existing) {
+      byWeekday.set(rule.weekday, { start: rule.start_time, end: rule.end_time });
+    } else {
+      if (rule.start_time < existing.start) existing.start = rule.start_time;
+      if (rule.end_time > existing.end) existing.end = rule.end_time;
+    }
+  }
+  const workingHours: WorkingHours[] = Array.from(byWeekday.entries())
+    .sort((a, b) => a[0] - b[0])
+    .map(([weekday, { start, end }]) => ({
+      weekday,
+      start_time: start.slice(0, 5),
+      end_time: end.slice(0, 5),
+    }));
 
   return {
     establishment,
@@ -95,6 +132,7 @@ export async function getEstablishmentBySlug(slug: string): Promise<Establishmen
     services: (servicesResult.data ?? []) as PublicService[],
     portfolio: (portfolioResult.data ?? []) as PublicPortfolioItem[],
     reviews,
+    workingHours,
     avgRating,
     totalReviews,
   };
