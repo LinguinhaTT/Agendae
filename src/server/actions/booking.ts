@@ -7,6 +7,9 @@ import {
   getAvailableSlots,
   isSlotStillAvailable,
 } from "@/lib/booking/availability";
+import { sendAppointmentEmail } from "@/lib/notifications/send";
+import type { AppointmentEmailParams } from "@/lib/notifications/templates/appointment";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { BookingError, Result } from "@/types";
 
@@ -199,7 +202,7 @@ export async function createAppointment(
   const { data: establishment } = await supabase
     .from("establishments")
     .select(
-      "id, auto_confirm, buffer_minutes, booking_advance_min_hours, booking_advance_max_days, plan"
+      "id, auto_confirm, buffer_minutes, booking_advance_min_hours, booking_advance_max_days, plan, name, slug, owner_id"
     )
     .eq("id", d.establishmentId)
     .maybeSingle();
@@ -279,6 +282,44 @@ export async function createAppointment(
     }
     return { ok: false, error: { type: "UNKNOWN" } };
   }
+
+  // Fire-and-forget email notifications
+  void (async () => {
+    try {
+      const { data: prof } = await supabase
+        .from("establishment_members")
+        .select("display_name")
+        .eq("id", d.professionalId)
+        .maybeSingle();
+
+      const sharedParams: AppointmentEmailParams = {
+        type: status === "confirmed" ? "booking_confirmed" : "booking_received",
+        clientName: d.clientName,
+        clientEmail: d.clientEmail,
+        clientPhone: d.clientPhone,
+        serviceName: d.serviceNameSnapshot,
+        professionalName: prof?.display_name ?? null,
+        establishmentName: establishment.name,
+        establishmentSlug: establishment.slug,
+        startsAt: new Date(d.startsAt),
+        endsAt: new Date(d.endsAt),
+        priceCents: d.priceCentsSnapshot,
+      };
+
+      await sendAppointmentEmail(d.clientEmail, sharedParams);
+
+      const adminClient = createAdminClient();
+      const { data: ownerAuth } = await adminClient.auth.admin.getUserById(establishment.owner_id);
+      if (ownerAuth.user?.email) {
+        await sendAppointmentEmail(ownerAuth.user.email, {
+          ...sharedParams,
+          type: "owner_new_booking",
+        });
+      }
+    } catch (err) {
+      console.error("[Email] Booking notification error:", err);
+    }
+  })();
 
   return { ok: true, data: { appointmentId: appointment.id, status: appointment.status } };
 }

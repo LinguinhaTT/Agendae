@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { sendAppointmentEmail } from "@/lib/notifications/send";
 import { createClient } from "@/lib/supabase/server";
 import type { Result } from "@/types";
 
@@ -47,6 +48,57 @@ export async function updateAppointmentStatus(
     .eq("establishment_id", establishmentId);
 
   if (error) return { ok: false, error: error.message };
+
+  if (status === "confirmed" || status === "cancelled") {
+    void (async () => {
+      try {
+        const [apptResult, estResult] = await Promise.all([
+          supabase
+            .from("appointments")
+            .select(
+              "client_name, client_email, client_phone, service_name_snapshot, price_cents_snapshot, starts_at, ends_at, professional_id"
+            )
+            .eq("id", appointmentId)
+            .maybeSingle(),
+          supabase
+            .from("establishments")
+            .select("name, slug")
+            .eq("id", establishmentId)
+            .maybeSingle(),
+        ]);
+
+        if (!apptResult.data || !estResult.data) return;
+        const appt = apptResult.data;
+        const est = estResult.data;
+
+        let professionalName: string | null = null;
+        if (appt.professional_id) {
+          const { data: prof } = await supabase
+            .from("establishment_members")
+            .select("display_name")
+            .eq("id", appt.professional_id)
+            .maybeSingle();
+          professionalName = prof?.display_name ?? null;
+        }
+
+        await sendAppointmentEmail(appt.client_email, {
+          type: status === "confirmed" ? "booking_confirmed" : "booking_cancelled",
+          clientName: appt.client_name,
+          clientEmail: appt.client_email,
+          clientPhone: appt.client_phone ?? null,
+          serviceName: appt.service_name_snapshot,
+          professionalName,
+          establishmentName: est.name,
+          establishmentSlug: est.slug,
+          startsAt: new Date(appt.starts_at),
+          endsAt: new Date(appt.ends_at),
+          priceCents: appt.price_cents_snapshot,
+        });
+      } catch (err) {
+        console.error("[Email] Status notification error:", err);
+      }
+    })();
+  }
 
   revalidatePath("/admin/agenda");
   revalidatePath("/admin");
