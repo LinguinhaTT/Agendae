@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -923,7 +923,7 @@ export function BookingWizard({
                 <Link href="/termos" className="text-primary hover:underline">
                   Termos de Uso
                 </Link>{" "}
-                do InkBook.
+                do Agendaê.
               </p>
             </form>
           </div>

@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -59,7 +59,7 @@ export async function createMember(input: unknown): Promise<Result<{ id: string 
       return {
         ok: false,
         error:
-          "Para adicionar um profissional, peça que ele se cadastre no InkBook e use o e-mail para vinculá-lo.",
+          "Para adicionar um profissional, peça que ele se cadastre no Agendaê e use o e-mail para vinculá-lo.",
       };
     return { ok: false, error: error.message };
   }

@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+﻿import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 const PROTECTED_ROUTES = ["/admin", "/pro", "/conta", "/super"];
@@ -32,15 +32,15 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Extract tenant slug from subdomain (slug.inkbook.app)
+  // Extract tenant slug from subdomain (slug.Agendaê.app)
   const hostname = request.headers.get("host") ?? "";
   const isSubdomain =
-    hostname.includes(".inkbook.app") &&
+    hostname.includes(".Agendaê.app") &&
     !hostname.startsWith("www.") &&
-    !hostname.startsWith("inkbook.");
+    !hostname.startsWith("Agendaê.");
 
   if (isSubdomain) {
-    const slug = hostname.split(".inkbook.app")[0];
+    const slug = hostname.split(".Agendaê.app")[0];
     supabaseResponse.headers.set("x-tenant-slug", slug ?? "");
   }
 

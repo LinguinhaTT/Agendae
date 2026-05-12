@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { getAdminContext } from "@/lib/data/admin";
 
 export const metadata: Metadata = {
-  title: { template: "%s — InkBook Admin", default: "InkBook Admin" },
+  title: { template: "%s — Agendaê Admin", default: "Agendaê Admin" },
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -10,19 +10,19 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "InkBook — Agendamento Online para Tatuadores e Barbeiros",
-    template: "%s | InkBook",
+    default: "Agendaê — Agendamento Online para Tatuadores e Barbeiros",
+    template: "%s | Agendaê",
   },
   description:
     "Plataforma de agendamento online para tatuadores, barbeiros, salões de beleza e profissionais de estética. Marque em 3 cliques, sem vai-e-volta no WhatsApp.",
-  keywords: ["agendamento online", "tatuagem", "barbearia", "salão de beleza", "inkbook"],
-  authors: [{ name: "InkBook" }],
-  creator: "InkBook",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://inkbook.app"),
+  keywords: ["agendamento online", "tatuagem", "barbearia", "salão de beleza", "Agendaê"],
+  authors: [{ name: "Agendaê" }],
+  creator: "Agendaê",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://Agendaê.app"),
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    siteName: "InkBook",
+    siteName: "Agendaê",
   },
   twitter: {
     card: "summary_large_image",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "InkBook",
+    title: "Agendaê",
   },
 };
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Calendar,
@@ -41,7 +41,7 @@ export function AdminSidebar({ establishmentName, slug }: Props) {
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/5">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-            InkBook
+            Agendaê
           </p>
           <p className="font-bold text-sm truncate">{establishmentName}</p>
         </div>

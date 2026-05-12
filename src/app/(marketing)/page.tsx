@@ -1,4 +1,4 @@
-import {
+﻿import {
   ArrowRight,
   BarChart3,
   Bell,
@@ -241,7 +241,7 @@ export default function HomePage() {
           </Badge>
           <h2 className="text-3xl md:text-5xl font-black mb-4">Tudo que você precisa</h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Do agendamento ao financeiro, o InkBook cobre todos os aspectos do seu negócio.
+            Do agendamento ao financeiro, o Agendaê cobre todos os aspectos do seu negócio.
           </p>
         </div>
 

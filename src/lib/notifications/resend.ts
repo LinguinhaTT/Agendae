@@ -1,4 +1,4 @@
-import { Resend } from "resend";
+﻿import { Resend } from "resend";
 
 let _resend: Resend | null = null;
 
@@ -8,4 +8,4 @@ export function getResend(): Resend | null {
   return _resend;
 }
 
-export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "InkBook <onboarding@resend.dev>";
+export const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Agendaê <onboarding@resend.dev>";

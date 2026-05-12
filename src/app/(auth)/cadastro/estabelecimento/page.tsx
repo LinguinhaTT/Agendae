@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, CheckCircle2, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
@@ -366,7 +366,7 @@ export default function CadastroEstabelecimentoPage() {
               <div className="bg-muted/40 rounded-lg px-4 py-2 text-sm">
                 <span className="text-muted-foreground">Seu link: </span>
                 <span className="font-mono font-medium text-primary">
-                  inkbook.app/e/{createdSlug}
+                  Agendaê.app/e/{createdSlug}
                 </span>
               </div>
             )}

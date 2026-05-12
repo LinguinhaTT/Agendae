@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 function NavBar() {
@@ -9,7 +9,7 @@ function NavBar() {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-white text-xs font-black">IB</span>
           </div>
-          InkBook
+          Agendaê
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
@@ -47,7 +47,7 @@ function Footer() {
               <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
                 <span className="text-white text-xs font-black">IB</span>
               </div>
-              InkBook
+              Agendaê
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Agendamento online para tatuadores, barbeiros e profissionais de estética.
@@ -109,7 +109,7 @@ function Footer() {
         </div>
 
         <div className="border-t border-white/5 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} InkBook. Todos os direitos reservados.</p>
+          <p>© {new Date().getFullYear()} Agendaê. Todos os direitos reservados.</p>
           <p>Feito com ♥ no Brasil 🇧🇷</p>
         </div>
       </div>

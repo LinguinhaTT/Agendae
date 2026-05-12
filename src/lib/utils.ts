@@ -1,4 +1,4 @@
-import { type ClassValue, clsx } from "clsx";
+﻿import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -40,6 +40,6 @@ export function generateToken(length = 32): string {
 }
 
 export function absoluteUrl(path: string): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://inkbook.app";
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://Agendaê.app";
   return `${base}${path}`;
 }

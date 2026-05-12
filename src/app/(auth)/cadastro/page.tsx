@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
@@ -88,7 +88,7 @@ export default function CadastroPage() {
     <Card className="w-full max-w-md glass-card border-white/10">
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">Criar conta grátis</CardTitle>
-        <CardDescription>Comece a usar o InkBook hoje mesmo</CardDescription>
+        <CardDescription>Comece a usar o Agendaê hoje mesmo</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">

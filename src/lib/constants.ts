@@ -1,5 +1,5 @@
-export const APP_NAME = "InkBook";
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://inkbook.app";
+﻿export const APP_NAME = "Agendaê";
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://Agendaê.app";
 
 export const ESTABLISHMENT_CATEGORIES = [
   { value: "tattoo", label: "Estúdio de Tatuagem" },

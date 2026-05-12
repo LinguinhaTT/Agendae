@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Política de Privacidade",
-  description: "Política de Privacidade do InkBook — como coletamos e usamos seus dados.",
+  description: "Política de Privacidade do Agendaê — como coletamos e usamos seus dados.",
 };
 
 export default function PrivacidadePage() {
@@ -17,7 +17,7 @@ export default function PrivacidadePage() {
         <section className="space-y-3">
           <h2 className="text-xl font-bold">1. Introdução</h2>
           <p className="text-muted-foreground">
-            O InkBook está comprometido com a proteção de seus dados pessoais, em conformidade com a
+            O Agendaê está comprometido com a proteção de seus dados pessoais, em conformidade com a
             Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018). Esta política explica quais
             dados coletamos, como os usamos e seus direitos.
           </p>
@@ -128,8 +128,8 @@ export default function PrivacidadePage() {
           </ul>
           <p className="text-muted-foreground">
             Para exercer esses direitos, entre em contato:{" "}
-            <a href="mailto:privacidade@inkbook.app" className="text-primary hover:underline">
-              privacidade@inkbook.app
+            <a href="mailto:privacidade@Agendaê.app" className="text-primary hover:underline">
+              privacidade@Agendaê.app
             </a>
           </p>
         </section>
@@ -163,8 +163,8 @@ export default function PrivacidadePage() {
           <h2 className="text-xl font-bold">12. Contato — DPO</h2>
           <p className="text-muted-foreground">
             Encarregado de Proteção de Dados (DPO):{" "}
-            <a href="mailto:privacidade@inkbook.app" className="text-primary hover:underline">
-              privacidade@inkbook.app
+            <a href="mailto:privacidade@Agendaê.app" className="text-primary hover:underline">
+              privacidade@Agendaê.app
             </a>
           </p>
         </section>

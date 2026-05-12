@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
@@ -83,7 +83,7 @@ function EntrarForm() {
     <Card className="w-full max-w-md glass-card border-white/10">
       <CardHeader className="space-y-1 text-center">
         <CardTitle className="text-2xl font-bold">Bem-vindo de volta</CardTitle>
-        <CardDescription>Entre na sua conta InkBook</CardDescription>
+        <CardDescription>Entre na sua conta Agendaê</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
