@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(git:*)",
+      "Bash(mkdir:*)",
+      "Bash(echo:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(cd:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(node:*)",
+      "Bash(touch:*)",
+      "Bash(rm:*)",
+      "Edit",
+      "Write",
+      "Read"
+    ]
+  }
+}
