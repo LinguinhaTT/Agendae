@@ -19,8 +19,18 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["profiles"]["Row"], "created_at" | "updated_at">;
+        Insert: {
+          id?: string;
+          full_name: string;
+          email: string;
+          phone?: string | null;
+          avatar_url?: string | null;
+          birth_date?: string | null;
+          document?: string | null;
+          gender?: "male" | "female" | "other" | "prefer_not_to_say" | null;
+        };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
+        Relationships: [];
       };
       establishments: {
         Row: {
@@ -63,11 +73,46 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<
-          Database["public"]["Tables"]["establishments"]["Row"],
-          "created_at" | "updated_at"
-        >;
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          description?: string | null;
+          category: string;
+          logo_url?: string | null;
+          cover_url?: string | null;
+          primary_color?: string;
+          email?: string | null;
+          phone?: string | null;
+          whatsapp?: string | null;
+          instagram?: string | null;
+          website?: string | null;
+          address_zip?: string | null;
+          address_street?: string | null;
+          address_number?: string | null;
+          address_complement?: string | null;
+          address_neighborhood?: string | null;
+          address_city?: string | null;
+          address_state?: string | null;
+          address_country?: string;
+          latitude?: number | null;
+          longitude?: number | null;
+          booking_advance_min_hours?: number;
+          booking_advance_max_days?: number;
+          cancellation_hours_before?: number;
+          require_deposit?: boolean;
+          deposit_percentage?: number;
+          auto_confirm?: boolean;
+          buffer_minutes?: number;
+          owner_id: string;
+          plan?: string;
+          plan_status?: string;
+          trial_ends_at?: string | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+        };
         Update: Partial<Database["public"]["Tables"]["establishments"]["Insert"]>;
+        Relationships: [];
       };
       establishment_members: {
         Row: {
@@ -84,8 +129,29 @@ export interface Database {
           position: number;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["establishment_members"]["Row"], "created_at">;
+        Insert: {
+          id?: string;
+          establishment_id: string;
+          user_id: string;
+          role: "owner" | "professional" | "staff";
+          display_name?: string;
+          bio?: string | null;
+          specialties?: string[] | null;
+          commission_percentage?: number;
+          is_active?: boolean;
+          is_visible_public?: boolean;
+          position?: number;
+        };
         Update: Partial<Database["public"]["Tables"]["establishment_members"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "establishment_members_establishment_id_fkey";
+            columns: ["establishment_id"];
+            isOneToOne: false;
+            referencedRelation: "establishments";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       services: {
         Row: {
@@ -102,8 +168,29 @@ export interface Database {
           position: number;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["services"]["Row"], "created_at">;
+        Insert: {
+          id?: string;
+          establishment_id: string;
+          name: string;
+          description?: string | null;
+          category?: string | null;
+          duration_minutes: number;
+          price_cents: number;
+          image_url?: string | null;
+          is_active?: boolean;
+          requires_consultation?: boolean;
+          position?: number;
+        };
         Update: Partial<Database["public"]["Tables"]["services"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "services_establishment_id_fkey";
+            columns: ["establishment_id"];
+            isOneToOne: false;
+            referencedRelation: "establishments";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       professional_services: {
         Row: {
@@ -112,8 +199,14 @@ export interface Database {
           custom_price_cents: number | null;
           custom_duration_minutes: number | null;
         };
-        Insert: Database["public"]["Tables"]["professional_services"]["Row"];
+        Insert: {
+          professional_id: string;
+          service_id: string;
+          custom_price_cents?: number | null;
+          custom_duration_minutes?: number | null;
+        };
         Update: Partial<Database["public"]["Tables"]["professional_services"]["Insert"]>;
+        Relationships: [];
       };
       availability_rules: {
         Row: {
@@ -125,8 +218,16 @@ export interface Database {
           is_active: boolean;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["availability_rules"]["Row"], "created_at">;
+        Insert: {
+          id?: string;
+          professional_id: string;
+          weekday: number;
+          start_time: string;
+          end_time: string;
+          is_active?: boolean;
+        };
         Update: Partial<Database["public"]["Tables"]["availability_rules"]["Insert"]>;
+        Relationships: [];
       };
       time_off: {
         Row: {
@@ -137,8 +238,15 @@ export interface Database {
           reason: string | null;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["time_off"]["Row"], "created_at">;
+        Insert: {
+          id?: string;
+          professional_id: string;
+          starts_at: string;
+          ends_at: string;
+          reason?: string | null;
+        };
         Update: Partial<Database["public"]["Tables"]["time_off"]["Insert"]>;
+        Relationships: [];
       };
       appointments: {
         Row: {
@@ -169,11 +277,42 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<
-          Database["public"]["Tables"]["appointments"]["Row"],
-          "created_at" | "updated_at"
-        >;
+        Insert: {
+          id?: string;
+          establishment_id: string;
+          professional_id: string;
+          service_id: string;
+          client_id?: string | null;
+          client_name: string;
+          client_email: string;
+          client_phone: string;
+          client_notes?: string | null;
+          starts_at: string;
+          ends_at: string;
+          service_name_snapshot: string;
+          price_cents_snapshot: number;
+          duration_minutes_snapshot: number;
+          status?: "pending" | "confirmed" | "cancelled" | "no_show" | "completed" | "rescheduled";
+          cancellation_reason?: string | null;
+          cancelled_by?: string | null;
+          payment_status?: "not_required" | "pending" | "paid" | "refunded" | "failed";
+          deposit_cents?: number;
+          payment_provider?: string | null;
+          payment_intent_id?: string | null;
+          source?: string;
+          reminded_24h?: boolean;
+          reminded_2h?: boolean;
+        };
         Update: Partial<Database["public"]["Tables"]["appointments"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "appointments_establishment_id_fkey";
+            columns: ["establishment_id"];
+            isOneToOne: false;
+            referencedRelation: "establishments";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       reviews: {
         Row: {
@@ -189,8 +328,20 @@ export interface Database {
           owner_responded_at: string | null;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["reviews"]["Row"], "created_at">;
+        Insert: {
+          id?: string;
+          appointment_id: string;
+          establishment_id: string;
+          professional_id: string;
+          client_id?: string | null;
+          rating: number;
+          comment?: string | null;
+          is_public?: boolean;
+          owner_response?: string | null;
+          owner_responded_at?: string | null;
+        };
         Update: Partial<Database["public"]["Tables"]["reviews"]["Insert"]>;
+        Relationships: [];
       };
       portfolio_items: {
         Row: {
@@ -206,8 +357,20 @@ export interface Database {
           position: number;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["portfolio_items"]["Row"], "created_at">;
+        Insert: {
+          id?: string;
+          establishment_id: string;
+          professional_id?: string | null;
+          image_url: string;
+          thumbnail_url?: string | null;
+          title?: string | null;
+          description?: string | null;
+          tags?: string[] | null;
+          is_featured?: boolean;
+          position?: number;
+        };
         Update: Partial<Database["public"]["Tables"]["portfolio_items"]["Insert"]>;
+        Relationships: [];
       };
       notifications: {
         Row: {
@@ -221,8 +384,18 @@ export interface Database {
           read_at: string | null;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["notifications"]["Row"], "created_at">;
+        Insert: {
+          id?: string;
+          user_id: string;
+          establishment_id?: string | null;
+          type: string;
+          title: string;
+          body: string;
+          data?: Json | null;
+          read_at?: string | null;
+        };
         Update: Partial<Database["public"]["Tables"]["notifications"]["Insert"]>;
+        Relationships: [];
       };
       push_subscriptions: {
         Row: {
@@ -235,8 +408,17 @@ export interface Database {
           created_at: string;
           last_used_at: string | null;
         };
-        Insert: Omit<Database["public"]["Tables"]["push_subscriptions"]["Row"], "created_at">;
+        Insert: {
+          id?: string;
+          user_id: string;
+          endpoint: string;
+          p256dh_key: string;
+          auth_key: string;
+          user_agent?: string | null;
+          last_used_at?: string | null;
+        };
         Update: Partial<Database["public"]["Tables"]["push_subscriptions"]["Insert"]>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
