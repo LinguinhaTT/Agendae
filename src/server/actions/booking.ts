@@ -10,6 +10,7 @@ import {
 import { generateCancelToken } from "@/lib/booking/cancel-token";
 import { sendAppointmentEmail } from "@/lib/notifications/send";
 import type { AppointmentEmailParams } from "@/lib/notifications/templates/appointment";
+import { buildBookingMessage, sendWhatsAppText } from "@/lib/notifications/whatsapp";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { BookingError, Result } from "@/types";
@@ -205,7 +206,7 @@ export async function createAppointment(
   const { data: establishment } = await supabase
     .from("establishments")
     .select(
-      "id, auto_confirm, buffer_minutes, booking_advance_min_hours, booking_advance_max_days, plan, name, slug, owner_id"
+      "id, auto_confirm, buffer_minutes, booking_advance_min_hours, booking_advance_max_days, plan, name, slug, owner_id, phone, whatsapp"
     )
     .eq("id", d.establishmentId)
     .maybeSingle();
@@ -323,8 +324,26 @@ export async function createAppointment(
           type: "owner_new_booking",
         });
       }
+
+      // WhatsApp notification to owner
+      const ownerPhone = establishment.whatsapp ?? establishment.phone;
+      if (ownerPhone) {
+        const waMessage = buildBookingMessage({
+          establishmentName: establishment.name,
+          clientName: d.clientName,
+          clientPhone: d.clientPhone,
+          clientEmail: d.clientEmail,
+          serviceName: d.serviceNameSnapshot,
+          professionalName: prof?.display_name ?? null,
+          startsAt: new Date(d.startsAt),
+          endsAt: new Date(d.endsAt),
+          priceCents: d.priceCentsSnapshot,
+          status: status as "pending" | "confirmed",
+        });
+        await sendWhatsAppText(ownerPhone, waMessage);
+      }
     } catch (err) {
-      console.error("[Email] Booking notification error:", err);
+      console.error("[Notification] Booking notification error:", err);
     }
   })();
 
