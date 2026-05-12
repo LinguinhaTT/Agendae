@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { AdminService } from "@/lib/data/admin";
-import { formatCurrency, formatDuration } from "@/lib/utils";
+import { formatDuration, formatPrice } from "@/lib/utils";
 import { createService, deleteService, toggleService, updateService } from "@/server/actions/admin";
 
 const DURATIONS = [15, 30, 45, 60, 75, 90, 120, 150, 180, 240, 300];
@@ -20,6 +20,7 @@ interface FormState {
   description: string;
   duration_minutes: string;
   price_brl: string;
+  price_on_quote: boolean;
 }
 
 const emptyForm: FormState = {
@@ -28,6 +29,7 @@ const emptyForm: FormState = {
   description: "",
   duration_minutes: "60",
   price_brl: "",
+  price_on_quote: false,
 };
 
 function serviceToForm(s: AdminService): FormState {
@@ -36,7 +38,8 @@ function serviceToForm(s: AdminService): FormState {
     category: s.category ?? "",
     description: s.description ?? "",
     duration_minutes: String(s.duration_minutes),
-    price_brl: (s.price_cents / 100).toFixed(2),
+    price_brl: s.price_cents === 0 ? "" : (s.price_cents / 100).toFixed(2),
+    price_on_quote: s.price_cents === 0,
   };
 }
 
@@ -89,7 +92,9 @@ export function ServicosManager({ initialServices }: Props) {
       category: form.category.trim() || undefined,
       description: form.description.trim() || undefined,
       duration_minutes: Number(form.duration_minutes),
-      price_cents: Math.round(Number(form.price_brl.replace(",", ".")) * 100),
+      price_cents: form.price_on_quote
+        ? 0
+        : Math.round(Number(form.price_brl.replace(",", ".")) * 100),
     };
 
     try {
@@ -199,16 +204,32 @@ export function ServicosManager({ initialServices }: Props) {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="svc-price">Preço (R$) *</Label>
-              <Input
-                id="svc-price"
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                placeholder="0,00"
-                {...field("price_brl")}
-              />
+              <Label htmlFor="svc-price">Preço (R$)</Label>
+              <div className="flex items-center gap-2 mb-1.5">
+                <input
+                  id="svc-quote"
+                  type="checkbox"
+                  checked={form.price_on_quote}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, price_on_quote: e.target.checked, price_brl: "" }))
+                  }
+                  className="h-4 w-4 rounded accent-primary"
+                />
+                <label htmlFor="svc-quote" className="text-sm cursor-pointer text-muted-foreground">
+                  Preço a combinar (orçamento)
+                </label>
+              </div>
+              {!form.price_on_quote && (
+                <Input
+                  id="svc-price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                  placeholder="0,00"
+                  {...field("price_brl")}
+                />
+              )}
             </div>
             <div className="space-y-1.5 md:col-span-2">
               <Label htmlFor="svc-desc">Descrição</Label>
@@ -270,7 +291,7 @@ export function ServicosManager({ initialServices }: Props) {
               </div>
 
               <div className="shrink-0 text-right mr-2">
-                <p className="font-bold text-sm text-primary">{formatCurrency(svc.price_cents)}</p>
+                <p className="font-bold text-sm text-primary">{formatPrice(svc.price_cents)}</p>
               </div>
 
               <div className="flex items-center gap-1 shrink-0">

@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn, formatCurrency, formatDuration } from "@/lib/utils";
+import { cn, formatDuration, formatPrice } from "@/lib/utils";
 import {
   createAppointment,
   getAvailableDatesForMonth,
@@ -500,9 +500,11 @@ export function BookingWizard({
               </div>
             </div>
             <div className="border-t border-white/5 pt-3 flex items-center justify-between">
-              <span className="text-muted-foreground">Total</span>
+              <span className="text-muted-foreground">
+                {(state.service?.price_cents ?? 0) === 0 ? "Valor" : "Total"}
+              </span>
               <span className="font-bold text-primary">
-                {formatCurrency(state.service?.price_cents ?? 0)}
+                {formatPrice(state.service?.price_cents ?? 0)}
               </span>
             </div>
           </div>
@@ -600,9 +602,7 @@ export function BookingWizard({
                       {formatDuration(svc.duration_minutes)}
                     </p>
                   </div>
-                  <p className="font-bold text-primary shrink-0">
-                    {formatCurrency(svc.price_cents)}
-                  </p>
+                  <p className="font-bold text-primary shrink-0">{formatPrice(svc.price_cents)}</p>
                 </button>
               ))}
             </div>
@@ -831,7 +831,7 @@ export function BookingWizard({
                   </p>
                 </div>
                 <p className="font-bold text-primary shrink-0">
-                  {formatCurrency(state.service.price_cents)}
+                  {formatPrice(state.service.price_cents)}
                 </p>
               </div>
             )}

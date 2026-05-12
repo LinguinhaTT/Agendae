@@ -58,10 +58,10 @@ export function buildBookingMessage(p: BookingWhatsAppParams): string {
     timeZone: "America/Sao_Paulo",
   });
 
-  const price = (p.priceCents / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
+  const price =
+    p.priceCents === 0
+      ? "A combinar"
+      : (p.priceCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const lines = [
     `${icon} *Novo Agendamento — ${p.establishmentName}*`,

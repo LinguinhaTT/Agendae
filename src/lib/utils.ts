@@ -12,6 +12,11 @@ export function formatCurrency(cents: number): string {
   }).format(cents / 100);
 }
 
+/** Returns "A combinar" when price is 0 (tattoo studios, quote-based services) */
+export function formatPrice(cents: number): string {
+  return cents === 0 ? "A combinar" : formatCurrency(cents);
+}
+
 export function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes}min`;
   const h = Math.floor(minutes / 60);

@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ESTABLISHMENT_CATEGORIES } from "@/lib/constants";
 import { getEstablishmentBySlug, type PublicService } from "@/lib/data/establishment";
-import { formatCurrency, formatDuration } from "@/lib/utils";
+import { formatDuration, formatPrice } from "@/lib/utils";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -85,7 +85,7 @@ function ServiceCard({ service, slug }: { service: PublicService; slug: string }
         </div>
       </div>
       <div className="shrink-0 text-right">
-        <p className="font-bold text-sm text-primary">{formatCurrency(service.price_cents)}</p>
+        <p className="font-bold text-sm text-primary">{formatPrice(service.price_cents)}</p>
         <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto mt-1 group-hover:text-primary transition-colors" />
       </div>
     </Link>

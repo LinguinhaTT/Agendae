@@ -35,6 +35,7 @@ function fmtTime(d: Date): string {
 }
 
 function fmtPrice(cents: number): string {
+  if (cents === 0) return "A combinar";
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
 
