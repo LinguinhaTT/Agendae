@@ -7,11 +7,14 @@ import {
   getAvailableSlots,
   isSlotStillAvailable,
 } from "@/lib/booking/availability";
+import { generateCancelToken } from "@/lib/booking/cancel-token";
 import { sendAppointmentEmail } from "@/lib/notifications/send";
 import type { AppointmentEmailParams } from "@/lib/notifications/templates/appointment";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { BookingError, Result } from "@/types";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://agendae.app";
 
 export interface SerializedSlot {
   time: string;
@@ -292,6 +295,9 @@ export async function createAppointment(
         .eq("id", d.professionalId)
         .maybeSingle();
 
+      const cancelToken = generateCancelToken(appointment.id, d.clientEmail);
+      const cancelUrl = `${APP_URL}/agendamento/${cancelToken}/cancelar`;
+
       const sharedParams: AppointmentEmailParams = {
         type: status === "confirmed" ? "booking_confirmed" : "booking_received",
         clientName: d.clientName,
@@ -304,6 +310,7 @@ export async function createAppointment(
         startsAt: new Date(d.startsAt),
         endsAt: new Date(d.endsAt),
         priceCents: d.priceCentsSnapshot,
+        cancelUrl,
       };
 
       await sendAppointmentEmail(d.clientEmail, sharedParams);

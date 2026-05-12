@@ -123,6 +123,7 @@ export interface Database {
           display_name: string;
           bio: string | null;
           specialties: string[] | null;
+          avatar_url: string | null;
           commission_percentage: number;
           is_active: boolean;
           is_visible_public: boolean;
@@ -137,6 +138,7 @@ export interface Database {
           display_name?: string;
           bio?: string | null;
           specialties?: string[] | null;
+          avatar_url?: string | null;
           commission_percentage?: number;
           is_active?: boolean;
           is_visible_public?: boolean;

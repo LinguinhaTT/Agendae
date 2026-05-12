@@ -16,9 +16,10 @@ export interface AppointmentEmailParams {
   startsAt: Date;
   endsAt: Date;
   priceCents: number;
+  cancelUrl?: string | null;
 }
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://inkbook.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://agendae.app";
 
 function fmt(d: Date): string {
   return d.toLocaleDateString("pt-BR", {
@@ -78,6 +79,8 @@ export function buildAppointmentEmail(p: AppointmentEmailParams): {
 
   const badge = badges[p.type];
   const isOwner = p.type === "owner_new_booking";
+  const showCancel =
+    p.cancelUrl && (p.type === "booking_received" || p.type === "booking_confirmed");
 
   const detailRows = [
     row("Serviço", p.serviceName),
@@ -115,7 +118,7 @@ export function buildAppointmentEmail(p: AppointmentEmailParams): {
       <tr>
         <td style="background:#09090b;padding:24px 32px;">
           <span style="display:inline-block;background:${badge.color};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:white;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">${badge.label}</span>
-          <div style="color:white;font-size:22px;font-weight:900;letter-spacing:-.5px;">InkBook</div>
+          <div style="color:white;font-size:22px;font-weight:900;letter-spacing:-.5px;">Agendaê</div>
           <div style="color:#a1a1aa;font-size:13px;margin-top:2px;">Sistema de agendamento</div>
         </td>
       </tr>
@@ -135,6 +138,15 @@ export function buildAppointmentEmail(p: AppointmentEmailParams): {
 
           <!-- CTA -->
           <a href="${ctaHref}" style="display:inline-block;background:#09090b;color:white;text-decoration:none;padding:13px 28px;border-radius:8px;font-weight:700;font-size:14px;">${ctaLabel} →</a>
+
+          ${
+            showCancel
+              ? `<!-- Cancel link -->
+          <p style="margin:20px 0 0;font-size:13px;color:#a1a1aa;">
+            Precisa cancelar? <a href="${p.cancelUrl}" style="color:#ef4444;text-decoration:none;">Cancelar agendamento</a>
+          </p>`
+              : ""
+          }
         </td>
       </tr>
 
@@ -142,7 +154,7 @@ export function buildAppointmentEmail(p: AppointmentEmailParams): {
       <tr>
         <td style="background:#fafafa;border-top:1px solid #f4f4f5;padding:18px 32px;text-align:center;">
           <p style="margin:0;font-size:12px;color:#a1a1aa;">
-            Este e-mail foi enviado pelo <strong>InkBook</strong> em nome de ${p.establishmentName}.
+            Este e-mail foi enviado pelo <strong>Agendaê</strong> em nome de ${p.establishmentName}.
           </p>
         </td>
       </tr>

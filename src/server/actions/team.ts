@@ -134,6 +134,26 @@ export async function deleteMember(id: string): Promise<Result<void, string>> {
   return { ok: true, data: undefined };
 }
 
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+
+export async function updateMemberAvatar(
+  memberId: string,
+  avatarUrl: string | null
+): Promise<Result<void, string>> {
+  const { supabase, establishmentId } = await getAuth();
+
+  const { error } = await supabase
+    .from("establishment_members")
+    .update({ avatar_url: avatarUrl })
+    .eq("id", memberId)
+    .eq("establishment_id", establishmentId);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/equipe");
+  return { ok: true, data: undefined };
+}
+
 // ─── Availability rules ───────────────────────────────────────────────────────
 
 const ruleItemSchema = z.object({

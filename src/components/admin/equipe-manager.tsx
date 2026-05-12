@@ -1,9 +1,11 @@
 "use client";
 
 import { CalendarDays, Pencil, Plus, Power, Trash2, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AvatarUpload } from "@/components/admin/avatar-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -275,10 +277,30 @@ export function EquipeManager({ initialMembers }: Props) {
             >
               <div className="flex items-center gap-4">
                 {/* Avatar */}
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <span className="text-sm font-bold text-primary">
-                    {m.display_name.charAt(0).toUpperCase()}
-                  </span>
+                <div className="shrink-0">
+                  {isEdit && (mode as { edit: TeamMember }).edit.id === m.id ? (
+                    <AvatarUpload
+                      memberId={m.id}
+                      currentUrl={m.avatar_url ?? null}
+                      displayName={m.display_name}
+                    />
+                  ) : m.avatar_url ? (
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                      <Image
+                        src={m.avatar_url}
+                        alt={m.display_name}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-sm font-bold text-primary">
+                        {m.display_name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Info */}
