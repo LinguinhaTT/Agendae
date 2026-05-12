@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 import type { Result } from "@/types";
@@ -51,6 +52,20 @@ export async function createEstablishment(
     };
   }
 
+  // Ensure profile exists (may not if trigger failed on signup). Use admin client to bypass RLS.
+  const displayName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    user.email?.split("@")[0] ??
+    "Proprietário";
+
+  const admin = createAdminClient();
+  await admin
+    .from("profiles")
+    .upsert(
+      { id: user.id, full_name: displayName, email: user.email ?? "" },
+      { onConflict: "id", ignoreDuplicates: true }
+    );
+
   const baseSlug = slugify(parsed.data.name);
   let slug = baseSlug;
   let attempt = 0;
@@ -90,7 +105,10 @@ export async function createEstablishment(
   if (estError || !establishment) {
     return {
       ok: false,
-      error: { type: "DB_ERROR", message: "Erro ao criar estabelecimento. Tente novamente." },
+      error: {
+        type: "DB_ERROR",
+        message: estError?.message ?? "Erro ao criar estabelecimento. Tente novamente.",
+      },
     };
   }
 
@@ -98,12 +116,13 @@ export async function createEstablishment(
     establishment_id: establishment.id,
     user_id: user.id,
     role: "owner",
+    display_name: displayName,
   });
 
   if (memberError) {
     return {
       ok: false,
-      error: { type: "DB_ERROR", message: "Erro ao configurar permissões. Tente novamente." },
+      error: { type: "DB_ERROR", message: memberError.message },
     };
   }
 
