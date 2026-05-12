@@ -1,6 +1,14 @@
 "use client";
 
-import { Calendar, ExternalLink, LayoutDashboard, LogOut, Scissors, Settings } from "lucide-react";
+import {
+  Calendar,
+  ExternalLink,
+  LayoutDashboard,
+  LogOut,
+  Scissors,
+  Settings,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -10,6 +18,7 @@ const NAV = [
   { href: "/admin", label: "Painel", icon: LayoutDashboard, exact: true },
   { href: "/admin/agenda", label: "Agenda", icon: Calendar, exact: false },
   { href: "/admin/servicos", label: "Serviços", icon: Scissors, exact: false },
+  { href: "/admin/equipe", label: "Equipe", icon: Users, exact: false },
   { href: "/admin/configuracoes", label: "Configurações", icon: Settings, exact: false },
 ];
 
