@@ -30,8 +30,20 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
+!.env.example
+
+# Claude Code local settings (personal overrides)
+.claude/settings.local.json
+
+# Supabase local
+supabase/.branches
+supabase/.temp
+
+# Playwright
+playwright-report/
+test-results/
 
 # vercel
 .vercel
