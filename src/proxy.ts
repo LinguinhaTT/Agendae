@@ -1,8 +1,10 @@
 ﻿import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-const PROTECTED_ROUTES = ["/admin", "/pro", "/conta", "/super"];
-const AUTH_ROUTES = ["/entrar", "/cadastro", "/esqueci-senha"];
+const PROTECTED_ROUTES = ["/admin", "/pro", "/conta", "/super", "/cadastro/estabelecimento"];
+const AUTH_ROUTES = ["/entrar", "/esqueci-senha"];
+// /cadastro (signup page) also redirects logged-in users, but /cadastro/estabelecimento must not
+const SIGNUP_ROUTE = "/cadastro";
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -45,7 +47,9 @@ export async function proxy(request: NextRequest) {
   }
 
   // Redirect authenticated users away from auth pages
-  if (user && AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
+  const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
+  const isSignupPage = pathname === SIGNUP_ROUTE;
+  if (user && (isAuthRoute || isSignupPage)) {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
 
