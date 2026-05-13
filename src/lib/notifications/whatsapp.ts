@@ -34,7 +34,7 @@ export interface BookingWhatsAppParams {
   status: "pending" | "confirmed";
 }
 
-export function buildBookingMessage(p: BookingWhatsAppParams): string {
+export function buildOwnerMessage(p: BookingWhatsAppParams): string {
   const icon = p.status === "confirmed" ? "✅" : "⏳";
   const statusLabel = p.status === "confirmed" ? "Confirmado" : "Aguardando confirmação";
 
@@ -63,7 +63,7 @@ export function buildBookingMessage(p: BookingWhatsAppParams): string {
       ? "A combinar"
       : (p.priceCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  const lines = [
+  return [
     `${icon} *Novo Agendamento — ${p.establishmentName}*`,
     `Status: ${statusLabel}`,
     "",
@@ -81,6 +81,50 @@ export function buildBookingMessage(p: BookingWhatsAppParams): string {
   ]
     .filter((l) => l !== null)
     .join("\n");
-
-  return lines;
 }
+
+export function buildClientMessage(p: BookingWhatsAppParams): string {
+  const dateLabel = p.startsAt.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    timeZone: "America/Sao_Paulo",
+  });
+
+  const startTime = p.startsAt.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  });
+
+  const price =
+    p.priceCents === 0
+      ? "A combinar"
+      : (p.priceCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  const statusLine =
+    p.status === "confirmed"
+      ? "✅ Seu agendamento está *confirmado*!"
+      : "⏳ Seu agendamento foi recebido e está *aguardando confirmação*.";
+
+  return [
+    `Olá, *${p.clientName}*! 👋`,
+    "",
+    statusLine,
+    "",
+    `🏠 *${p.establishmentName}*`,
+    `✂️ *Serviço:* ${p.serviceName}`,
+    p.professionalName ? `👨‍🎨 *Profissional:* ${p.professionalName}` : null,
+    `📅 *Data:* ${dateLabel}`,
+    `⏰ *Horário:* ${startTime}`,
+    `💰 *Valor:* ${price}`,
+    "",
+    "_Agendado via Agendaê_",
+  ]
+    .filter((l) => l !== null)
+    .join("\n");
+}
+
+/** @deprecated use buildOwnerMessage */
+export const buildBookingMessage = buildOwnerMessage;

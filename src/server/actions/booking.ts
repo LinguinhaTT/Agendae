@@ -10,7 +10,11 @@ import {
 import { generateCancelToken } from "@/lib/booking/cancel-token";
 import { sendAppointmentEmail } from "@/lib/notifications/send";
 import type { AppointmentEmailParams } from "@/lib/notifications/templates/appointment";
-import { buildBookingMessage, sendWhatsAppText } from "@/lib/notifications/whatsapp";
+import {
+  buildClientMessage,
+  buildOwnerMessage,
+  sendWhatsAppText,
+} from "@/lib/notifications/whatsapp";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { BookingError, Result } from "@/types";
@@ -325,23 +329,27 @@ export async function createAppointment(
         });
       }
 
-      // WhatsApp notification to owner
+      // WhatsApp notifications
+      const waParams = {
+        establishmentName: establishment.name,
+        clientName: d.clientName,
+        clientPhone: d.clientPhone,
+        clientEmail: d.clientEmail,
+        serviceName: d.serviceNameSnapshot,
+        professionalName: prof?.display_name ?? null,
+        startsAt: new Date(d.startsAt),
+        endsAt: new Date(d.endsAt),
+        priceCents: d.priceCentsSnapshot,
+        status: status as "pending" | "confirmed",
+      };
+
       const ownerPhone = establishment.whatsapp ?? establishment.phone;
       if (ownerPhone) {
-        const waMessage = buildBookingMessage({
-          establishmentName: establishment.name,
-          clientName: d.clientName,
-          clientPhone: d.clientPhone,
-          clientEmail: d.clientEmail,
-          serviceName: d.serviceNameSnapshot,
-          professionalName: prof?.display_name ?? null,
-          startsAt: new Date(d.startsAt),
-          endsAt: new Date(d.endsAt),
-          priceCents: d.priceCentsSnapshot,
-          status: status as "pending" | "confirmed",
-        });
-        await sendWhatsAppText(ownerPhone, waMessage);
+        await sendWhatsAppText(ownerPhone, buildOwnerMessage(waParams));
       }
+
+      // WhatsApp para o cliente
+      await sendWhatsAppText(d.clientPhone, buildClientMessage(waParams));
     } catch (err) {
       console.error("[Notification] Booking notification error:", err);
     }
