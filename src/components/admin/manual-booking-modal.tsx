@@ -11,43 +11,35 @@ import {
   getAdminProfessionals,
   getServicesForProfessional,
 } from "@/server/actions/admin";
-import {
-  getAvailableDatesForMonth,
-  getSlotsForDate,
-  type SerializedSlot,
-} from "@/server/actions/booking";
 
 interface Props {
   establishmentId: string;
   bufferMinutes: number;
 }
 
-type Step = "professional" | "service" | "date" | "time" | "client";
+type Step = "professional" | "service" | "datetime" | "client";
 
-const STEPS: Step[] = ["professional", "service", "date", "time", "client"];
+const STEPS: Step[] = ["professional", "service", "datetime", "client"];
 
 const STEP_LABELS: Record<Step, string> = {
   professional: "Profissional",
   service: "Serviço",
-  date: "Data",
-  time: "Horário",
+  datetime: "Data e Horário",
   client: "Cliente",
 };
 
-export function ManualBookingModal({ bufferMinutes }: Props) {
+export function ManualBookingModal({ bufferMinutes: _bufferMinutes }: Props) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("professional");
   const [isPending, startTransition] = useTransition();
 
   const [professionals, setProfessionals] = useState<AdminProfessional[]>([]);
   const [services, setServices] = useState<AdminServiceOption[]>([]);
-  const [slots, setSlots] = useState<SerializedSlot[]>([]);
-  const [availableDates, setAvailableDates] = useState<string[]>([]);
 
   const [selectedPro, setSelectedPro] = useState<AdminProfessional | null>(null);
   const [selectedService, setSelectedService] = useState<AdminServiceOption | null>(null);
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedSlot, setSelectedSlot] = useState<SerializedSlot | null>(null);
+  const [selectedTime, setSelectedTime] = useState("");
 
   const [clientName, setClientName] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -62,7 +54,7 @@ export function ManualBookingModal({ bufferMinutes }: Props) {
     setSelectedPro(null);
     setSelectedService(null);
     setSelectedDate("");
-    setSelectedSlot(null);
+    setSelectedTime("");
     setClientName("");
     setClientPhone("");
     setClientEmail("");
@@ -87,8 +79,6 @@ export function ManualBookingModal({ bufferMinutes }: Props) {
   function selectProfessional(pro: AdminProfessional) {
     setSelectedPro(pro);
     setSelectedService(null);
-    setSelectedDate("");
-    setSelectedSlot(null);
     setStep("service");
     startTransition(async () => {
       const data = await getServicesForProfessional(pro.id);
@@ -98,61 +88,43 @@ export function ManualBookingModal({ bufferMinutes }: Props) {
 
   function selectService(svc: AdminServiceOption) {
     setSelectedService(svc);
-    setSelectedDate("");
-    setSelectedSlot(null);
-    setStep("date");
-    const now = new Date();
-    startTransition(async () => {
-      const dates = await getAvailableDatesForMonth(
-        selectedPro!.id,
-        svc.duration_minutes,
-        now.getFullYear(),
-        now.getMonth(),
-        bufferMinutes,
-        0
-      );
-      setAvailableDates(dates);
-    });
+    setStep("datetime");
   }
 
-  function selectDate(date: string) {
-    setSelectedDate(date);
-    setSelectedSlot(null);
-    setStep("time");
-    startTransition(async () => {
-      const data = await getSlotsForDate(
-        selectedPro!.id,
-        selectedService!.duration_minutes,
-        date,
-        bufferMinutes,
-        0
-      );
-      setSlots(data);
-    });
+  function computeSlot(): { startsAt: string; endsAt: string } | null {
+    if (!selectedDate || !selectedTime || !selectedService) return null;
+    const starts = new Date(`${selectedDate}T${selectedTime}:00`);
+    if (Number.isNaN(starts.getTime())) return null;
+    const ends = new Date(starts.getTime() + selectedService.duration_minutes * 60 * 1000);
+    return { startsAt: starts.toISOString(), endsAt: ends.toISOString() };
   }
 
-  function selectSlot(slot: SerializedSlot) {
-    setSelectedSlot(slot);
+  function handleDatetimeNext() {
+    if (!selectedDate || !selectedTime) {
+      setError("Selecione a data e o horário.");
+      return;
+    }
+    if (!computeSlot()) {
+      setError("Data ou horário inválido.");
+      return;
+    }
+    setError("");
     setStep("client");
-  }
-
-  function handleDateInput(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value;
-    if (!val) return;
-    selectDate(val);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedPro || !selectedService || !selectedSlot) return;
+    if (!selectedPro || !selectedService) return;
+    const slot = computeSlot();
+    if (!slot) return;
     setError("");
 
     startTransition(async () => {
       const result = await createManualAppointment({
         professionalId: selectedPro.id,
         serviceId: selectedService.id,
-        startsAt: selectedSlot.startsAt,
-        endsAt: selectedSlot.endsAt,
+        startsAt: slot.startsAt,
+        endsAt: slot.endsAt,
         serviceNameSnapshot: selectedService.name,
         priceCentsSnapshot: selectedService.price_cents,
         durationMinutesSnapshot: selectedService.duration_minutes,
@@ -186,7 +158,6 @@ export function ManualBookingModal({ bufferMinutes }: Props) {
       <AnimatePresence>
         {open && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -195,13 +166,12 @@ export function ManualBookingModal({ bufferMinutes }: Props) {
               className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
             />
 
-            {/* Modal */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
               transition={{ type: "spring", stiffness: 300, damping: 28 }}
-              className="fixed inset-x-4 top-[50%] -translate-y-1/2 z-50 mx-auto max-w-md rounded-2xl border border-white/10 bg-card shadow-2xl overflow-hidden"
+              className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 mx-auto max-w-md rounded-2xl border border-white/10 bg-card shadow-2xl overflow-hidden"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
@@ -244,7 +214,7 @@ export function ManualBookingModal({ bufferMinutes }: Props) {
               )}
 
               {/* Body */}
-              <div className="p-5 max-h-[60vh] overflow-y-auto">
+              <div className="p-5 max-h-[65vh] overflow-y-auto">
                 {success ? (
                   <div className="flex flex-col items-center gap-3 py-6 text-center">
                     <div className="w-14 h-14 rounded-full bg-emerald-500/15 flex items-center justify-center">
@@ -253,14 +223,9 @@ export function ManualBookingModal({ bufferMinutes }: Props) {
                     <p className="font-bold">Agendamento criado!</p>
                     <p className="text-sm text-muted-foreground">
                       {clientName} — {selectedService?.name} —{" "}
-                      {selectedSlot &&
-                        new Date(selectedSlot.startsAt).toLocaleString("pt-BR", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          timeZone: "America/Sao_Paulo",
-                        })}
+                      {selectedDate &&
+                        selectedTime &&
+                        `${new Date(`${selectedDate}T${selectedTime}:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} às ${selectedTime}`}
                     </p>
                     <button
                       type="button"
@@ -276,9 +241,7 @@ export function ManualBookingModal({ bufferMinutes }: Props) {
                   </div>
                 ) : step === "professional" ? (
                   <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Escolha o profissional responsável:
-                    </p>
+                    <p className="text-sm text-muted-foreground mb-3">Escolha o profissional:</p>
                     {professionals.length === 0 && (
                       <p className="text-sm text-muted-foreground text-center py-4">
                         Nenhum profissional ativo.
@@ -317,50 +280,68 @@ export function ManualBookingModal({ bufferMinutes }: Props) {
                       </button>
                     ))}
                   </div>
-                ) : step === "date" ? (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-3">Escolha a data:</p>
-                    <input
-                      type="date"
-                      min={new Date().toISOString().split("T")[0]}
-                      onChange={handleDateInput}
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm focus:outline-none focus:border-primary/50 transition-colors"
-                    />
-                    {availableDates.length > 0 && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {availableDates.length} dias disponíveis neste mês
-                      </p>
-                    )}
-                  </div>
-                ) : step === "time" ? (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Escolha o horário —{" "}
-                      {new Date(`${selectedDate}T12:00:00`).toLocaleDateString("pt-BR", {
-                        weekday: "long",
-                        day: "2-digit",
-                        month: "long",
-                      })}
-                      :
-                    </p>
-                    {slots.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-6">
-                        Nenhum horário disponível nesta data.
-                      </p>
-                    ) : (
-                      <div className="grid grid-cols-3 gap-2">
-                        {slots.map((slot) => (
-                          <button
-                            key={slot.startsAt}
-                            type="button"
-                            onClick={() => selectSlot(slot)}
-                            className="rounded-xl border border-white/8 bg-white/[0.03] py-2.5 text-sm font-medium hover:border-primary/40 hover:bg-primary/[0.06] transition-all"
-                          >
-                            {slot.time}
-                          </button>
-                        ))}
+                ) : step === "datetime" ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">Escolha a data e o horário:</p>
+
+                    <div>
+                      <label
+                        htmlFor="mb-date"
+                        className="text-xs text-muted-foreground mb-1.5 block"
+                      >
+                        Data
+                      </label>
+                      <input
+                        id="mb-date"
+                        type="date"
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="mb-time"
+                        className="text-xs text-muted-foreground mb-1.5 block"
+                      >
+                        Horário de início
+                      </label>
+                      <input
+                        id="mb-time"
+                        type="time"
+                        value={selectedTime}
+                        onChange={(e) => setSelectedTime(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                      />
+                    </div>
+
+                    {selectedService && selectedDate && selectedTime && (
+                      <div className="rounded-xl bg-primary/[0.06] border border-primary/15 px-4 py-3 text-xs text-muted-foreground">
+                        Término previsto:{" "}
+                        <span className="text-foreground font-medium">
+                          {new Date(
+                            new Date(`${selectedDate}T${selectedTime}:00`).getTime() +
+                              selectedService.duration_minutes * 60 * 1000
+                          ).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        </span>{" "}
+                        ({selectedService.duration_minutes} min)
                       </div>
                     )}
+
+                    {error && (
+                      <p className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                        {error}
+                      </p>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleDatetimeNext}
+                      className="w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:brightness-110 transition-all"
+                    >
+                      Continuar
+                    </button>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-3">
@@ -441,18 +422,15 @@ export function ManualBookingModal({ bufferMinutes }: Props) {
                       <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
                         <span>{selectedService?.name}</span>
                         <span>
-                          {selectedSlot?.time} ·{" "}
                           {selectedDate &&
-                            new Date(`${selectedDate}T12:00:00`).toLocaleDateString("pt-BR", {
-                              day: "2-digit",
-                              month: "2-digit",
-                            })}
+                            selectedTime &&
+                            `${new Date(`${selectedDate}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} às ${selectedTime}`}
                         </span>
                       </div>
                       <button
                         type="submit"
                         disabled={isPending}
-                        className="w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
                       >
                         {isPending ? "Criando..." : "Confirmar agendamento"}
                       </button>
