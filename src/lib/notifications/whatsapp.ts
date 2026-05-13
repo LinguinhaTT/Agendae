@@ -10,11 +10,20 @@ export async function sendWhatsAppText(to: string, text: string): Promise<void> 
   if (!ZAPI_INSTANCE || !ZAPI_TOKEN) return;
 
   try {
-    await fetch(`https://api.z-api.io/instances/${ZAPI_INSTANCE}/token/${ZAPI_TOKEN}/send-text`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: normalizePhone(to), message: text }),
-    });
+    const res = await fetch(
+      `https://api.z-api.io/instances/${ZAPI_INSTANCE}/token/${ZAPI_TOKEN}/send-text`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: normalizePhone(to), message: text }),
+      }
+    );
+    if (!res.ok) {
+      const body = await res.text();
+      console.error("[WhatsApp] Z-API error:", res.status, body);
+    } else {
+      console.log("[WhatsApp] Sent to", normalizePhone(to));
+    }
   } catch (err) {
     console.error("[WhatsApp] Failed to send:", err);
   }
