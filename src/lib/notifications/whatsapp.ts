@@ -1,6 +1,5 @@
-const EVOLUTION_URL = process.env.EVOLUTION_API_URL;
-const EVOLUTION_KEY = process.env.EVOLUTION_API_KEY;
-const EVOLUTION_INSTANCE = process.env.EVOLUTION_API_INSTANCE;
+const ZAPI_INSTANCE = process.env.ZAPI_INSTANCE_ID;
+const ZAPI_TOKEN = process.env.ZAPI_TOKEN;
 
 function normalizePhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
@@ -8,13 +7,13 @@ function normalizePhone(phone: string): string {
 }
 
 export async function sendWhatsAppText(to: string, text: string): Promise<void> {
-  if (!EVOLUTION_URL || !EVOLUTION_KEY || !EVOLUTION_INSTANCE) return;
+  if (!ZAPI_INSTANCE || !ZAPI_TOKEN) return;
 
   try {
-    await fetch(`${EVOLUTION_URL}/message/sendText/${EVOLUTION_INSTANCE}`, {
+    await fetch(`https://api.z-api.io/instances/${ZAPI_INSTANCE}/token/${ZAPI_TOKEN}/send-text`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", apikey: EVOLUTION_KEY },
-      body: JSON.stringify({ number: normalizePhone(to), text }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: normalizePhone(to), message: text }),
     });
   } catch (err) {
     console.error("[WhatsApp] Failed to send:", err);
