@@ -288,6 +288,106 @@ export async function updateEstablishmentImages(
   return { ok: true, data: undefined };
 }
 
+// ─── Manual booking ───────────────────────────────────────────────────────────
+
+export interface AdminProfessional {
+  id: string;
+  display_name: string;
+}
+
+export interface AdminServiceOption {
+  id: string;
+  name: string;
+  duration_minutes: number;
+  price_cents: number;
+}
+
+export async function getAdminProfessionals(): Promise<AdminProfessional[]> {
+  const { supabase, establishmentId } = await getAuth();
+  const { data } = await supabase
+    .from("establishment_members")
+    .select("id, display_name")
+    .eq("establishment_id", establishmentId)
+    .eq("is_active", true)
+    .order("position");
+  return (data ?? []) as AdminProfessional[];
+}
+
+export async function getServicesForProfessional(
+  professionalId: string
+): Promise<AdminServiceOption[]> {
+  const { supabase, establishmentId } = await getAuth();
+
+  const { data: linked } = await supabase
+    .from("professional_services")
+    .select("service_id")
+    .eq("professional_id", professionalId);
+
+  let q = supabase
+    .from("services")
+    .select("id, name, duration_minutes, price_cents")
+    .eq("establishment_id", establishmentId)
+    .eq("is_active", true)
+    .order("name");
+
+  if (linked && linked.length > 0) {
+    q = q.in(
+      "id",
+      linked.map((r) => r.service_id)
+    );
+  }
+
+  const { data } = await q;
+  return (data ?? []) as AdminServiceOption[];
+}
+
+const manualBookingSchema = z.object({
+  professionalId: z.string().uuid(),
+  serviceId: z.string().uuid(),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+  serviceNameSnapshot: z.string(),
+  priceCentsSnapshot: z.number().int().nonnegative(),
+  durationMinutesSnapshot: z.number().int().positive(),
+  clientName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  clientPhone: z.string().min(8, "Telefone inválido"),
+  clientEmail: z.string().email("Email inválido").optional().or(z.literal("")),
+  clientNotes: z.string().max(500).optional(),
+});
+
+export async function createManualAppointment(input: unknown): Promise<Result<void, string>> {
+  const { supabase, establishmentId } = await getAuth();
+
+  const parsed = manualBookingSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  const d = parsed.data;
+
+  const { error } = await supabase.from("appointments").insert({
+    establishment_id: establishmentId,
+    professional_id: d.professionalId,
+    service_id: d.serviceId,
+    client_name: d.clientName,
+    client_phone: d.clientPhone,
+    client_email: d.clientEmail ?? "",
+    client_notes: d.clientNotes ?? null,
+    starts_at: d.startsAt,
+    ends_at: d.endsAt,
+    service_name_snapshot: d.serviceNameSnapshot,
+    price_cents_snapshot: d.priceCentsSnapshot,
+    duration_minutes_snapshot: d.durationMinutesSnapshot,
+    status: "confirmed",
+    source: "manual",
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/agenda");
+  revalidatePath("/admin");
+  return { ok: true, data: undefined };
+}
+
 // ─── Establishment settings ───────────────────────────────────────────────────
 
 const settingsSchema = z.object({

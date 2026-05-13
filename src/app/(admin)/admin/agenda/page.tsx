@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AgendaDateFilter } from "@/components/admin/agenda-date-filter";
 import { AppointmentActions } from "@/components/admin/appointment-actions";
+import { ManualBookingModal } from "@/components/admin/manual-booking-modal";
 import { APPOINTMENT_STATUS_LABELS } from "@/lib/constants";
 import { getAdminContext, getAppointmentsAdmin } from "@/lib/data/admin";
 import { formatDuration, formatPrice } from "@/lib/utils";
@@ -53,7 +54,13 @@ export default async function AgendaPage({ searchParams }: Props) {
               ` em ${new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "long" })}`}
           </p>
         </div>
-        <AgendaDateFilter currentDate={date} currentStatus={status} />
+        <div className="flex items-center gap-2 flex-wrap">
+          <ManualBookingModal
+            establishmentId={establishment.id}
+            bufferMinutes={establishment.buffer_minutes}
+          />
+          <AgendaDateFilter currentDate={date} currentStatus={status} />
+        </div>
       </div>
 
       {/* Status tabs */}
