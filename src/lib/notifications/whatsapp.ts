@@ -1,5 +1,6 @@
 const ZAPI_INSTANCE = process.env.ZAPI_INSTANCE_ID;
 const ZAPI_TOKEN = process.env.ZAPI_TOKEN;
+const ZAPI_CLIENT_TOKEN = process.env.ZAPI_CLIENT_TOKEN;
 
 function normalizePhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
@@ -7,14 +8,14 @@ function normalizePhone(phone: string): string {
 }
 
 export async function sendWhatsAppText(to: string, text: string): Promise<void> {
-  if (!ZAPI_INSTANCE || !ZAPI_TOKEN) return;
+  if (!ZAPI_INSTANCE || !ZAPI_TOKEN || !ZAPI_CLIENT_TOKEN) return;
 
   try {
     const res = await fetch(
       `https://api.z-api.io/instances/${ZAPI_INSTANCE}/token/${ZAPI_TOKEN}/send-text`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Client-Token": ZAPI_TOKEN },
+        headers: { "Content-Type": "application/json", "Client-Token": ZAPI_CLIENT_TOKEN },
         body: JSON.stringify({ phone: normalizePhone(to), message: text }),
       }
     );
