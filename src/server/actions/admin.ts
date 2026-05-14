@@ -82,11 +82,10 @@ export async function updateAppointmentStatus(
           professionalName = prof?.display_name ?? null;
         }
 
-        await sendAppointmentEmail(appt.client_email, {
-          type: status === "confirmed" ? "booking_confirmed" : "booking_cancelled",
+        const notifParams = {
           clientName: appt.client_name,
           clientEmail: appt.client_email,
-          clientPhone: appt.client_phone ?? null,
+          clientPhone: appt.client_phone ?? "",
           serviceName: appt.service_name_snapshot,
           professionalName,
           establishmentName: est.name,
@@ -94,9 +93,20 @@ export async function updateAppointmentStatus(
           startsAt: new Date(appt.starts_at),
           endsAt: new Date(appt.ends_at),
           priceCents: appt.price_cents_snapshot,
-        });
+        };
+
+        await Promise.allSettled([
+          sendAppointmentEmail(appt.client_email, {
+            type: status === "confirmed" ? "booking_confirmed" : "booking_cancelled",
+            ...notifParams,
+            clientPhone: appt.client_phone ?? null,
+          }),
+          appt.client_phone
+            ? sendWhatsAppText(appt.client_phone, buildClientMessage({ ...notifParams, status }))
+            : Promise.resolve(),
+        ]);
       } catch (err) {
-        console.error("[Email] Status notification error:", err);
+        console.error("[Notification] Status notification error:", err);
       }
     })();
   }

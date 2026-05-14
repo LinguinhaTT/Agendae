@@ -40,7 +40,7 @@ export interface BookingWhatsAppParams {
   startsAt: Date;
   endsAt: Date;
   priceCents: number;
-  status: "pending" | "confirmed";
+  status: "pending" | "confirmed" | "cancelled";
 }
 
 export function buildOwnerMessage(p: BookingWhatsAppParams): string {
@@ -112,10 +112,26 @@ export function buildClientMessage(p: BookingWhatsAppParams): string {
       ? "A combinar"
       : (p.priceCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+  if (p.status === "cancelled") {
+    return [
+      `Olá, *${p.clientName}*! 👋`,
+      "",
+      `❌ Seu agendamento em *${p.establishmentName}* foi *cancelado*.`,
+      "",
+      `✂️ *Serviço:* ${p.serviceName}`,
+      `📅 *Data:* ${dateLabel}`,
+      `⏰ *Horário:* ${startTime}`,
+      "",
+      "Se quiser remarcar, entre em contato conosco. Lamentamos o transtorno! 🙏",
+    ]
+      .filter((l) => l !== null)
+      .join("\n");
+  }
+
   const statusLine =
     p.status === "confirmed"
-      ? "✅ Seu agendamento está *confirmado*!"
-      : "⏳ Seu agendamento foi recebido e está *aguardando confirmação*.";
+      ? "✅ Seu agendamento está *confirmado*! Até lá 🤙"
+      : "⏳ Seu agendamento foi recebido e está *aguardando confirmação*. Entraremos em contato em breve!";
 
   return [
     `Olá, *${p.clientName}*! 👋`,
@@ -124,12 +140,12 @@ export function buildClientMessage(p: BookingWhatsAppParams): string {
     "",
     `🏠 *${p.establishmentName}*`,
     `✂️ *Serviço:* ${p.serviceName}`,
-    p.professionalName ? `👨‍🎨 *Profissional:* ${p.professionalName}` : null,
+    p.professionalName ? `👤 *Profissional:* ${p.professionalName}` : null,
     `📅 *Data:* ${dateLabel}`,
     `⏰ *Horário:* ${startTime}`,
     `💰 *Valor:* ${price}`,
     "",
-    "_Agendado via Agendaê_",
+    "Qualquer dúvida, pode responder esta mensagem! 😊",
   ]
     .filter((l) => l !== null)
     .join("\n");
