@@ -72,6 +72,7 @@ const updateMemberSchema = z.object({
   display_name: z.string().min(2, "Nome deve ter ao menos 2 caracteres"),
   bio: z.string().max(500).optional(),
   specialties: z.array(z.string()).optional(),
+  whatsapp: z.string().optional(),
   is_visible_public: z.boolean(),
 });
 
@@ -88,6 +89,7 @@ export async function updateMember(id: string, input: unknown): Promise<Result<v
       display_name: parsed.data.display_name,
       bio: parsed.data.bio ?? null,
       specialties: parsed.data.specialties?.filter(Boolean) ?? null,
+      whatsapp: parsed.data.whatsapp?.trim() || null,
       is_visible_public: parsed.data.is_visible_public,
     })
     .eq("id", id)

@@ -5,7 +5,7 @@ export type PublicEstablishment = Tables<"establishments">;
 
 export type PublicMember = Pick<
   Tables<"establishment_members">,
-  "id" | "display_name" | "bio" | "specialties" | "is_visible_public" | "position"
+  "id" | "display_name" | "bio" | "specialties" | "is_visible_public" | "position" | "whatsapp"
 > & { avatar_url?: string | null };
 
 export type PublicService = Pick<
@@ -61,7 +61,7 @@ export async function getEstablishmentBySlug(slug: string): Promise<Establishmen
   const [membersResult, servicesResult, portfolioResult, reviewsResult] = await Promise.all([
     supabase
       .from("establishment_members")
-      .select("id, display_name, bio, specialties, is_visible_public, position")
+      .select("id, display_name, bio, specialties, whatsapp, is_visible_public, position")
       .eq("establishment_id", establishment.id)
       .eq("is_visible_public", true)
       .eq("is_active", true)

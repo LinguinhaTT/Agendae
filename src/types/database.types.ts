@@ -124,6 +124,7 @@ export interface Database {
           bio: string | null;
           specialties: string[] | null;
           avatar_url: string | null;
+          whatsapp: string | null;
           commission_percentage: number;
           is_active: boolean;
           is_visible_public: boolean;
@@ -139,6 +140,7 @@ export interface Database {
           bio?: string | null;
           specialties?: string[] | null;
           avatar_url?: string | null;
+          whatsapp?: string | null;
           commission_percentage?: number;
           is_active?: boolean;
           is_visible_public?: boolean;

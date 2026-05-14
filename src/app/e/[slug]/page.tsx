@@ -1,4 +1,4 @@
-import { AtSign, Clock, Globe, MapPin, Phone, Star } from "lucide-react";
+import { AtSign, Clock, Globe, MapPin, MessageCircle, Phone, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -319,6 +319,18 @@ export default async function EstablishmentPage({ params }: Props) {
                           </Badge>
                         ))}
                       </div>
+                    )}
+                    {member.whatsapp && (
+                      <a
+                        href={`https://wa.me/55${member.whatsapp.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold text-green-400 hover:text-green-300 bg-green-500/10 hover:bg-green-500/20 px-2.5 py-1 rounded-full transition-colors"
+                      >
+                        <MessageCircle className="h-3 w-3" />
+                        Chamar no WhatsApp
+                      </a>
                     )}
                   </div>
                 </StaggerItem>

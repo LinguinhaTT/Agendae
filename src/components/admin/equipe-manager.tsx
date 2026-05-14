@@ -29,6 +29,7 @@ interface FormState {
   display_name: string;
   bio: string;
   specialties: string;
+  whatsapp: string;
   role: "professional" | "staff";
   is_visible_public: boolean;
 }
@@ -37,6 +38,7 @@ const emptyForm: FormState = {
   display_name: "",
   bio: "",
   specialties: "",
+  whatsapp: "",
   role: "professional",
   is_visible_public: true,
 };
@@ -46,6 +48,7 @@ function memberToForm(m: TeamMember): FormState {
     display_name: m.display_name,
     bio: m.bio ?? "",
     specialties: m.specialties?.join(", ") ?? "",
+    whatsapp: m.whatsapp ?? "",
     role: m.role === "owner" ? "professional" : m.role,
     is_visible_public: m.is_visible_public,
   };
@@ -106,6 +109,7 @@ export function EquipeManager({ initialMembers }: Props) {
       display_name: form.display_name.trim(),
       bio: form.bio.trim() || undefined,
       specialties: specialties.length > 0 ? specialties : undefined,
+      whatsapp: form.whatsapp.trim() || undefined,
       role: form.role,
       is_visible_public: form.is_visible_public,
     };
@@ -229,6 +233,19 @@ export function EquipeManager({ initialMembers }: Props) {
                 placeholder="Ex: Tatuagem, Piercing (separe por vírgula)"
                 {...field("specialties")}
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="m-whatsapp">WhatsApp</Label>
+              <Input
+                id="m-whatsapp"
+                type="tel"
+                placeholder="Ex: 11999998888"
+                {...field("whatsapp")}
+              />
+              <p className="text-xs text-muted-foreground">
+                Só números com DDD. Aparece no site para o cliente entrar em contato.
+              </p>
             </div>
 
             <div className="space-y-1.5 md:col-span-2">
