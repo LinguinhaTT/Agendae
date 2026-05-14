@@ -2,7 +2,6 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 import { ImageIcon, Upload, X } from "lucide-react";
-import Image from "next/image";
 import { useRef, useState } from "react";
 import { updateEstablishmentImages } from "@/server/actions/admin";
 
@@ -109,7 +108,8 @@ export function EstablishmentImagesUpload({
         <div className="flex items-center gap-4">
           <div className="w-20 h-20 rounded-xl border border-white/10 bg-muted flex items-center justify-center overflow-hidden shrink-0">
             {logoUrl ? (
-              <Image src={logoUrl} alt="Logo" fill className="object-cover" unoptimized />
+              // biome-ignore lint/performance/noImgElement: storage URL, no optimization needed
+              <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
             ) : (
               <ImageIcon className="h-8 w-8 text-muted-foreground" />
             )}
@@ -155,7 +155,12 @@ export function EstablishmentImagesUpload({
         </p>
         <div className="rounded-xl border border-white/10 bg-muted overflow-hidden h-32 relative flex items-center justify-center">
           {coverUrl ? (
-            <Image src={coverUrl} alt="Capa" fill className="object-cover" unoptimized />
+            // biome-ignore lint/performance/noImgElement: storage URL, no optimization needed
+            <img
+              src={coverUrl}
+              alt="Capa"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
           ) : (
             <ImageIcon className="h-10 w-10 text-muted-foreground" />
           )}
