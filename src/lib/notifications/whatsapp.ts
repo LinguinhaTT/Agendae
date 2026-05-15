@@ -156,5 +156,71 @@ export function buildClientMessage(p: BookingWhatsAppParams): string {
     .join("\n");
 }
 
+export interface ReminderWhatsAppParams {
+  establishmentName: string;
+  clientName: string;
+  clientPhone: string;
+  serviceName: string;
+  professionalName: string | null;
+  startsAt: Date;
+  window: "24h" | "1h";
+}
+
+export function buildClientReminderMessage(p: ReminderWhatsAppParams): string {
+  const timeLabel = p.startsAt.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  });
+
+  const dateLabel = p.startsAt.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    timeZone: "America/Sao_Paulo",
+  });
+
+  const windowText = p.window === "1h" ? "em *1 hora*" : "amanhã";
+
+  return [
+    `Olá, *${p.clientName}*! 👋`,
+    "",
+    `⏰ Lembrete: seu agendamento é ${windowText}!`,
+    "",
+    `🏠 *${p.establishmentName}*`,
+    `✂️ *Serviço:* ${p.serviceName}`,
+    p.professionalName ? `👤 *Profissional:* ${p.professionalName}` : null,
+    `📅 *Data:* ${dateLabel}`,
+    `⏰ *Horário:* ${timeLabel}`,
+    "",
+    "Até logo! 😊",
+  ]
+    .filter((l) => l !== null)
+    .join("\n");
+}
+
+export function buildProfessionalReminderMessage(p: ReminderWhatsAppParams): string {
+  const timeLabel = p.startsAt.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  });
+
+  const windowText = p.window === "1h" ? "em 1 hora" : "amanhã";
+
+  return [
+    `⏰ *Lembrete — agendamento ${windowText}*`,
+    "",
+    `👤 *Cliente:* ${p.clientName}`,
+    `📱 *Telefone:* ${p.clientPhone}`,
+    `✂️ *Serviço:* ${p.serviceName}`,
+    `⏰ *Horário:* ${timeLabel}`,
+    "",
+    `_${p.establishmentName} via Agendaê_`,
+  ]
+    .filter((l) => l !== null)
+    .join("\n");
+}
+
 /** @deprecated use buildOwnerMessage */
 export const buildBookingMessage = buildOwnerMessage;
