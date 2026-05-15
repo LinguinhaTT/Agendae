@@ -44,8 +44,13 @@ export interface BookingWhatsAppParams {
 }
 
 export function buildOwnerMessage(p: BookingWhatsAppParams): string {
-  const icon = p.status === "confirmed" ? "✅" : "⏳";
-  const statusLabel = p.status === "confirmed" ? "Confirmado" : "Aguardando confirmação";
+  const icon = p.status === "cancelled" ? "❌" : p.status === "confirmed" ? "✅" : "⏳";
+  const statusLabel =
+    p.status === "cancelled"
+      ? "Cancelado"
+      : p.status === "confirmed"
+        ? "Confirmado"
+        : "Aguardando confirmação";
 
   const dateLabel = p.startsAt.toLocaleDateString("pt-BR", {
     weekday: "long",

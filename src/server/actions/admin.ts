@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { sendAppointmentEmail } from "@/lib/notifications/send";
-import { buildClientMessage, sendWhatsAppText } from "@/lib/notifications/whatsapp";
+import {
+  buildClientMessage,
+  buildOwnerMessage,
+  sendWhatsAppText,
+} from "@/lib/notifications/whatsapp";
 import { createClient } from "@/lib/supabase/server";
 import type { Result } from "@/types";
 
@@ -73,13 +77,15 @@ export async function updateAppointmentStatus(
         const est = estResult.data;
 
         let professionalName: string | null = null;
+        let professionalWhatsapp: string | null = null;
         if (appt.professional_id) {
           const { data: prof } = await supabase
             .from("establishment_members")
-            .select("display_name")
+            .select("display_name, whatsapp")
             .eq("id", appt.professional_id)
             .maybeSingle();
           professionalName = prof?.display_name ?? null;
+          professionalWhatsapp = prof?.whatsapp ?? null;
         }
 
         const notifParams = {
@@ -103,6 +109,9 @@ export async function updateAppointmentStatus(
           }),
           appt.client_phone
             ? sendWhatsAppText(appt.client_phone, buildClientMessage({ ...notifParams, status }))
+            : Promise.resolve(),
+          professionalWhatsapp
+            ? sendWhatsAppText(professionalWhatsapp, buildOwnerMessage({ ...notifParams, status }))
             : Promise.resolve(),
         ]);
       } catch (err) {
@@ -405,26 +414,30 @@ export async function createManualAppointment(input: unknown): Promise<Result<vo
 
       const { data: prof } = await supabase
         .from("establishment_members")
-        .select("display_name")
+        .select("display_name, whatsapp")
         .eq("id", d.professionalId)
         .maybeSingle();
 
       if (est) {
-        await sendWhatsAppText(
-          d.clientPhone,
-          buildClientMessage({
-            establishmentName: est.name,
-            clientName: d.clientName,
-            clientPhone: d.clientPhone,
-            clientEmail: d.clientEmail ?? "",
-            serviceName: d.serviceNameSnapshot,
-            professionalName: prof?.display_name ?? null,
-            startsAt: new Date(d.startsAt),
-            endsAt: new Date(d.endsAt),
-            priceCents: d.priceCentsSnapshot,
-            status: "confirmed",
-          })
-        );
+        const waParams = {
+          establishmentName: est.name,
+          clientName: d.clientName,
+          clientPhone: d.clientPhone,
+          clientEmail: d.clientEmail ?? "",
+          serviceName: d.serviceNameSnapshot,
+          professionalName: prof?.display_name ?? null,
+          startsAt: new Date(d.startsAt),
+          endsAt: new Date(d.endsAt),
+          priceCents: d.priceCentsSnapshot,
+          status: "confirmed" as const,
+        };
+
+        await Promise.allSettled([
+          sendWhatsAppText(d.clientPhone, buildClientMessage(waParams)),
+          prof?.whatsapp
+            ? sendWhatsAppText(prof.whatsapp, buildOwnerMessage(waParams))
+            : Promise.resolve(),
+        ]);
       }
     } catch (err) {
       console.error("[WhatsApp] Manual booking notification error:", err);

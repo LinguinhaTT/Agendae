@@ -296,7 +296,7 @@ export async function createAppointment(
     try {
       const { data: prof } = await supabase
         .from("establishment_members")
-        .select("display_name")
+        .select("display_name, whatsapp")
         .eq("id", d.professionalId)
         .maybeSingle();
 
@@ -346,6 +346,11 @@ export async function createAppointment(
       const ownerPhone = establishment.whatsapp ?? establishment.phone;
       if (ownerPhone) {
         await sendWhatsAppText(ownerPhone, buildOwnerMessage(waParams));
+      }
+
+      // WhatsApp para o profissional (se diferente do dono e tiver número cadastrado)
+      if (prof?.whatsapp && prof.whatsapp !== ownerPhone) {
+        await sendWhatsAppText(prof.whatsapp, buildOwnerMessage(waParams));
       }
 
       // WhatsApp para o cliente
