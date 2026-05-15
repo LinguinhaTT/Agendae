@@ -14,6 +14,153 @@ import { createService, deleteService, toggleService, updateService } from "@/se
 
 const DURATIONS = [15, 30, 45, 60, 75, 90, 120, 150, 180, 240, 300];
 
+interface ServiceSuggestion {
+  name: string;
+  category: string;
+  duration_minutes: number;
+  price_cents: number;
+}
+
+const SERVICE_SUGGESTIONS: Record<string, ServiceSuggestion[]> = {
+  tattoo: [
+    { name: "Tatuagem P&B Pequena", category: "Tatuagem", duration_minutes: 120, price_cents: 0 },
+    { name: "Tatuagem Colorida", category: "Tatuagem", duration_minutes: 240, price_cents: 0 },
+    { name: "Flash Tattoo", category: "Tatuagem", duration_minutes: 60, price_cents: 15000 },
+    { name: "Retoque", category: "Tatuagem", duration_minutes: 60, price_cents: 0 },
+    { name: "Cover-up", category: "Tatuagem", duration_minutes: 240, price_cents: 0 },
+    { name: "Piercing", category: "Piercing", duration_minutes: 30, price_cents: 8000 },
+    {
+      name: "Micropigmentação",
+      category: "Micropigmentação",
+      duration_minutes: 120,
+      price_cents: 0,
+    },
+  ],
+  barber: [
+    { name: "Corte Social", category: "Corte", duration_minutes: 30, price_cents: 4000 },
+    { name: "Corte + Barba", category: "Combo", duration_minutes: 60, price_cents: 6000 },
+    { name: "Barba", category: "Barba", duration_minutes: 30, price_cents: 3500 },
+    { name: "Pigmentação Capilar", category: "Coloração", duration_minutes: 60, price_cents: 8000 },
+    { name: "Hidratação Capilar", category: "Tratamento", duration_minutes: 30, price_cents: 5000 },
+    {
+      name: "Sobrancelha Masculina",
+      category: "Estética",
+      duration_minutes: 15,
+      price_cents: 2500,
+    },
+  ],
+  salon: [
+    { name: "Corte Feminino", category: "Corte", duration_minutes: 60, price_cents: 8000 },
+    { name: "Escova", category: "Escova", duration_minutes: 60, price_cents: 6000 },
+    { name: "Progressiva", category: "Química", duration_minutes: 120, price_cents: 20000 },
+    { name: "Coloração", category: "Química", duration_minutes: 120, price_cents: 15000 },
+    { name: "Mechas / Luzes", category: "Química", duration_minutes: 150, price_cents: 18000 },
+    { name: "Hidratação Capilar", category: "Tratamento", duration_minutes: 60, price_cents: 8000 },
+  ],
+  nail: [
+    { name: "Manicure", category: "Manicure", duration_minutes: 60, price_cents: 4000 },
+    { name: "Pedicure", category: "Pedicure", duration_minutes: 60, price_cents: 5000 },
+    { name: "Manicure + Pedicure", category: "Combo", duration_minutes: 90, price_cents: 8000 },
+    { name: "Esmaltação em Gel", category: "Gel", duration_minutes: 90, price_cents: 8000 },
+    {
+      name: "Alongamento de Unhas",
+      category: "Alongamento",
+      duration_minutes: 120,
+      price_cents: 15000,
+    },
+    { name: "Nail Art", category: "Decoração", duration_minutes: 30, price_cents: 3000 },
+  ],
+  eyebrow: [
+    { name: "Design de Sobrancelha", category: "Design", duration_minutes: 30, price_cents: 4000 },
+    { name: "Henna de Sobrancelha", category: "Henna", duration_minutes: 45, price_cents: 6000 },
+    {
+      name: "Laminação de Sobrancelha",
+      category: "Tratamento",
+      duration_minutes: 60,
+      price_cents: 12000,
+    },
+    { name: "Extensão de Cílios", category: "Cílios", duration_minutes: 90, price_cents: 15000 },
+    { name: "Remoção a Cera", category: "Depilação", duration_minutes: 15, price_cents: 3000 },
+  ],
+  aesthetics: [
+    { name: "Limpeza de Pele", category: "Pele", duration_minutes: 60, price_cents: 10000 },
+    { name: "Peeling Químico", category: "Pele", duration_minutes: 45, price_cents: 12000 },
+    { name: "Microagulhamento", category: "Pele", duration_minutes: 60, price_cents: 20000 },
+    {
+      name: "Depilação a Cera (pernas)",
+      category: "Depilação",
+      duration_minutes: 60,
+      price_cents: 8000,
+    },
+    {
+      name: "Depilação a Cera (axilas)",
+      category: "Depilação",
+      duration_minutes: 30,
+      price_cents: 4000,
+    },
+    { name: "Radiofrequência", category: "Tratamento", duration_minutes: 60, price_cents: 15000 },
+  ],
+  massage: [
+    { name: "Massagem Relaxante", category: "Massagem", duration_minutes: 60, price_cents: 12000 },
+    {
+      name: "Massagem Terapêutica",
+      category: "Massagem",
+      duration_minutes: 60,
+      price_cents: 13000,
+    },
+    { name: "Drenagem Linfática", category: "Massagem", duration_minutes: 60, price_cents: 12000 },
+    { name: "Pedras Quentes", category: "Massagem", duration_minutes: 75, price_cents: 16000 },
+    { name: "Reflexologia", category: "Massagem", duration_minutes: 45, price_cents: 9000 },
+  ],
+  podology: [
+    { name: "Podologia Completa", category: "Podologia", duration_minutes: 60, price_cents: 8000 },
+    { name: "Tratamento de Calos", category: "Podologia", duration_minutes: 45, price_cents: 6000 },
+    { name: "Onicomicose", category: "Podologia", duration_minutes: 45, price_cents: 7000 },
+  ],
+  psychology: [
+    {
+      name: "Consulta Psicológica",
+      category: "Consulta",
+      duration_minutes: 50,
+      price_cents: 15000,
+    },
+    {
+      name: "Avaliação Psicológica",
+      category: "Avaliação",
+      duration_minutes: 60,
+      price_cents: 18000,
+    },
+    { name: "Terapia Infantil", category: "Infantil", duration_minutes: 45, price_cents: 15000 },
+  ],
+  nutrition: [
+    {
+      name: "Consulta Nutricional",
+      category: "Consulta",
+      duration_minutes: 60,
+      price_cents: 15000,
+    },
+    { name: "Retorno Nutricional", category: "Retorno", duration_minutes: 30, price_cents: 8000 },
+    { name: "Avaliação Corporal", category: "Avaliação", duration_minutes: 45, price_cents: 12000 },
+  ],
+  vet: [
+    { name: "Banho", category: "Banho & Tosa", duration_minutes: 60, price_cents: 4000 },
+    { name: "Tosa", category: "Banho & Tosa", duration_minutes: 60, price_cents: 5000 },
+    { name: "Banho + Tosa", category: "Banho & Tosa", duration_minutes: 90, price_cents: 8000 },
+    {
+      name: "Hidratação de Pelagem",
+      category: "Tratamento",
+      duration_minutes: 30,
+      price_cents: 3000,
+    },
+  ],
+  carwash: [
+    { name: "Lavagem Simples", category: "Lavagem", duration_minutes: 30, price_cents: 4000 },
+    { name: "Lavagem Completa", category: "Lavagem", duration_minutes: 60, price_cents: 7000 },
+    { name: "Polimento", category: "Polimento", duration_minutes: 120, price_cents: 20000 },
+    { name: "Higienização Interna", category: "Limpeza", duration_minutes: 90, price_cents: 15000 },
+  ],
+};
+
 interface FormState {
   name: string;
   category: string;
@@ -45,9 +192,10 @@ function serviceToForm(s: AdminService): FormState {
 
 interface Props {
   initialServices: AdminService[];
+  establishmentCategory?: string | null;
 }
 
-export function ServicosManager({ initialServices }: Props) {
+export function ServicosManager({ initialServices, establishmentCategory }: Props) {
   const router = useRouter();
   const [mode, setMode] = useState<"idle" | "add" | { edit: AdminService }>("idle");
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -135,6 +283,23 @@ export function ServicosManager({ initialServices }: Props) {
       setToggling(null);
     }
   }
+
+  function applySuggestion(s: ServiceSuggestion) {
+    setForm({
+      name: s.name,
+      category: s.category,
+      description: "",
+      duration_minutes: String(s.duration_minutes),
+      price_brl: s.price_cents === 0 ? "" : (s.price_cents / 100).toFixed(2),
+      price_on_quote: s.price_cents === 0,
+    });
+    setError(null);
+    setMode("add");
+  }
+
+  const suggestions = establishmentCategory
+    ? (SERVICE_SUGGESTIONS[establishmentCategory] ?? [])
+    : [];
 
   const showForm = mode !== "idle";
   const isEdit = typeof mode === "object";
@@ -250,6 +415,30 @@ export function ServicosManager({ initialServices }: Props) {
             </Button>
           </div>
         </form>
+      )}
+
+      {/* Suggestions */}
+      {!showForm && suggestions.length > 0 && (
+        <div className="mb-6">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            Sugestões para adicionar
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {suggestions
+              .filter((s) => !initialServices.some((svc) => svc.name === s.name))
+              .map((s) => (
+                <button
+                  key={s.name}
+                  type="button"
+                  onClick={() => applySuggestion(s)}
+                  className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border border-white/10 hover:border-primary/40 hover:bg-primary/5 hover:text-primary text-muted-foreground transition-colors"
+                >
+                  <Plus className="h-3 w-3" />
+                  {s.name}
+                </button>
+              ))}
+          </div>
+        </div>
       )}
 
       {/* Services list */}

@@ -52,7 +52,7 @@ export default async function DashboardPage() {
       bg: "bg-green-500/10",
     },
     {
-      label: "Faturamento do mês",
+      label: "Recebido este mês",
       value: formatCurrency(data.monthlyRevenue),
       icon: DollarSign,
       color: "text-primary",

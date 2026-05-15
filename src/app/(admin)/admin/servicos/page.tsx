@@ -10,7 +10,7 @@ export default async function ServicosPage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <ServicosManager initialServices={services} />
+      <ServicosManager initialServices={services} establishmentCategory={establishment.category} />
     </div>
   );
 }

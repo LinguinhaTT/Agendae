@@ -47,7 +47,7 @@ export async function getDashboardData(establishmentId: string) {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const weekEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7).toISOString();
 
-  const [todayRes, pendingRes, monthRes, upcomingRes] = await Promise.all([
+  const [todayRes, pendingRes, monthCountRes, monthRevenueRes, upcomingRes] = await Promise.all([
     supabase
       .from("appointments")
       .select("id", { count: "exact", head: true })
@@ -62,12 +62,21 @@ export async function getDashboardData(establishmentId: string) {
       .eq("establishment_id", establishmentId)
       .eq("status", "pending"),
 
+    // total non-cancelled appointments this month (for "Este mês" count)
+    supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("establishment_id", establishmentId)
+      .gte("starts_at", monthStart)
+      .not("status", "in", '("cancelled","no_show")'),
+
+    // only completed appointments for revenue (balance goes up when you mark as done)
     supabase
       .from("appointments")
       .select("price_cents_snapshot")
       .eq("establishment_id", establishmentId)
       .gte("starts_at", monthStart)
-      .in("status", ["confirmed", "completed"]),
+      .eq("status", "completed"),
 
     supabase
       .from("appointments")
@@ -82,13 +91,16 @@ export async function getDashboardData(establishmentId: string) {
       .limit(10),
   ]);
 
-  const monthlyRevenue = (monthRes.data ?? []).reduce((sum, a) => sum + a.price_cents_snapshot, 0);
+  const monthlyRevenue = (monthRevenueRes.data ?? []).reduce(
+    (sum, a) => sum + a.price_cents_snapshot,
+    0
+  );
 
   return {
     todayCount: todayRes.count ?? 0,
     pendingCount: pendingRes.count ?? 0,
     monthlyRevenue,
-    monthlyCount: monthRes.data?.length ?? 0,
+    monthlyCount: monthCountRes.count ?? 0,
     upcoming: upcomingRes.data ?? [],
   };
 }
