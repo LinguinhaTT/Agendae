@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { generateCancelToken } from "@/lib/booking/cancel-token";
 import { sendAppointmentEmail } from "@/lib/notifications/send";
@@ -12,7 +13,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // Requires header: x-cron-secret matching CRON_SECRET env var
 export async function POST(request: Request) {
   const secret = request.headers.get("x-cron-secret");
-  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!secret || !cronSecret) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const a = Buffer.from(secret);
+  const b = Buffer.from(cronSecret);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

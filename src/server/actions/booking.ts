@@ -217,6 +217,33 @@ export async function createAppointment(
 
   if (!establishment) return { ok: false, error: { type: "ESTABLISHMENT_NOT_FOUND" } };
 
+  // Verify professional and service belong to this establishment, and get trusted values
+  const [memberRes, serviceRes] = await Promise.all([
+    supabase
+      .from("establishment_members")
+      .select("id")
+      .eq("id", d.professionalId)
+      .eq("establishment_id", d.establishmentId)
+      .eq("is_active", true)
+      .maybeSingle(),
+    supabase
+      .from("services")
+      .select("name, price_cents, duration_minutes")
+      .eq("id", d.serviceId)
+      .eq("establishment_id", d.establishmentId)
+      .eq("is_active", true)
+      .maybeSingle(),
+  ]);
+
+  if (!memberRes.data) return { ok: false, error: { type: "INVALID_INPUT", issues: [] } };
+  if (!serviceRes.data) return { ok: false, error: { type: "INVALID_INPUT", issues: [] } };
+
+  // Use trusted DB values — ignore client-provided snapshots
+  const trustedService = serviceRes.data;
+  const trustedEndsAt = new Date(
+    new Date(d.startsAt).getTime() + trustedService.duration_minutes * 60 * 1000
+  );
+
   // Check free plan limit
   if (establishment.plan === "free") {
     const monthStart = new Date();
@@ -243,7 +270,7 @@ export async function createAppointment(
     .in("status", ["pending", "confirmed"]);
 
   const startsAt = new Date(d.startsAt);
-  const endsAt = new Date(d.endsAt);
+  const endsAt = trustedEndsAt;
 
   const stillAvailable = isSlotStillAvailable({
     startsAt,
@@ -273,10 +300,10 @@ export async function createAppointment(
       client_phone: d.clientPhone,
       client_notes: d.clientNotes ?? null,
       starts_at: d.startsAt,
-      ends_at: d.endsAt,
-      service_name_snapshot: d.serviceNameSnapshot,
-      price_cents_snapshot: d.priceCentsSnapshot,
-      duration_minutes_snapshot: d.durationMinutesSnapshot,
+      ends_at: trustedEndsAt.toISOString(),
+      service_name_snapshot: trustedService.name,
+      price_cents_snapshot: trustedService.price_cents,
+      duration_minutes_snapshot: trustedService.duration_minutes,
       status,
       source: "booking_page",
     })
@@ -308,13 +335,13 @@ export async function createAppointment(
         clientName: d.clientName,
         clientEmail: d.clientEmail,
         clientPhone: d.clientPhone,
-        serviceName: d.serviceNameSnapshot,
+        serviceName: trustedService.name,
         professionalName: prof?.display_name ?? null,
         establishmentName: establishment.name,
         establishmentSlug: establishment.slug,
         startsAt: new Date(d.startsAt),
-        endsAt: new Date(d.endsAt),
-        priceCents: d.priceCentsSnapshot,
+        endsAt: trustedEndsAt,
+        priceCents: trustedService.price_cents,
         cancelUrl,
       };
 
@@ -335,11 +362,11 @@ export async function createAppointment(
         clientName: d.clientName,
         clientPhone: d.clientPhone,
         clientEmail: d.clientEmail,
-        serviceName: d.serviceNameSnapshot,
+        serviceName: trustedService.name,
         professionalName: prof?.display_name ?? null,
         startsAt: new Date(d.startsAt),
-        endsAt: new Date(d.endsAt),
-        priceCents: d.priceCentsSnapshot,
+        endsAt: trustedEndsAt,
+        priceCents: trustedService.price_cents,
         status: status as "pending" | "confirmed",
       };
 

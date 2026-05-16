@@ -1,7 +1,9 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-function secret() {
-  return process.env.CANCEL_TOKEN_SECRET ?? "agendae-cancel-fallback";
+function secret(): string {
+  const s = process.env.CANCEL_TOKEN_SECRET;
+  if (!s) throw new Error("CANCEL_TOKEN_SECRET is not configured");
+  return s;
 }
 
 export function generateCancelToken(appointmentId: string, clientEmail: string): string {

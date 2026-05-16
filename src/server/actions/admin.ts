@@ -452,16 +452,16 @@ export async function createManualAppointment(input: unknown): Promise<Result<vo
 // ─── Establishment settings ───────────────────────────────────────────────────
 
 const settingsSchema = z.object({
-  name: z.string().min(2, "Nome deve ter ao menos 2 caracteres"),
+  name: z.string().min(2, "Nome deve ter ao menos 2 caracteres").max(100),
   description: z.string().max(500).optional(),
-  phone: z.string().optional(),
-  whatsapp: z.string().optional(),
-  instagram: z.string().optional(),
-  website: z.string().optional(),
+  phone: z.string().max(20).optional(),
+  whatsapp: z.string().max(20).optional(),
+  instagram: z.string().max(60).optional(),
+  website: z.string().max(200).optional(),
   auto_confirm: z.boolean(),
-  buffer_minutes: z.number().int().nonnegative(),
-  booking_advance_min_hours: z.number().int().nonnegative(),
-  booking_advance_max_days: z.number().int().positive(),
+  buffer_minutes: z.number().int().nonnegative().max(120),
+  booking_advance_min_hours: z.number().int().nonnegative().max(168),
+  booking_advance_max_days: z.number().int().positive().max(365),
 });
 
 export async function updateEstablishment(input: unknown): Promise<Result<void, string>> {

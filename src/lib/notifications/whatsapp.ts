@@ -2,13 +2,22 @@ const ZAPI_INSTANCE = process.env.ZAPI_INSTANCE_ID;
 const ZAPI_TOKEN = process.env.ZAPI_TOKEN;
 const ZAPI_CLIENT_TOKEN = process.env.ZAPI_CLIENT_TOKEN;
 
-function normalizePhone(phone: string): string {
+function normalizePhone(phone: string): string | null {
   const digits = phone.replace(/\D/g, "");
-  return digits.startsWith("55") ? digits : `55${digits}`;
+  const normalized = digits.startsWith("55") ? digits : `55${digits}`;
+  // valid Brazilian numbers: 55 + DDD (2) + number (8 or 9) = 12 or 13 digits
+  if (normalized.length < 12 || normalized.length > 13) return null;
+  return normalized;
 }
 
 export async function sendWhatsAppText(to: string, text: string): Promise<void> {
   if (!ZAPI_INSTANCE || !ZAPI_TOKEN || !ZAPI_CLIENT_TOKEN) return;
+
+  const phone = normalizePhone(to);
+  if (!phone) {
+    console.warn("[WhatsApp] Invalid phone number, skipping:", to);
+    return;
+  }
 
   try {
     const res = await fetch(
@@ -16,14 +25,14 @@ export async function sendWhatsAppText(to: string, text: string): Promise<void> 
       {
         method: "POST",
         headers: { "Content-Type": "application/json", "Client-Token": ZAPI_CLIENT_TOKEN },
-        body: JSON.stringify({ phone: normalizePhone(to), message: text }),
+        body: JSON.stringify({ phone, message: text }),
       }
     );
     if (!res.ok) {
       const body = await res.text();
       console.error("[WhatsApp] Z-API error:", res.status, body);
     } else {
-      console.log("[WhatsApp] Sent to", normalizePhone(to));
+      console.log("[WhatsApp] Sent to", phone);
     }
   } catch (err) {
     console.error("[WhatsApp] Failed to send:", err);

@@ -39,10 +39,19 @@ function fmtPrice(cents: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
 
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 function row(label: string, value: string): string {
   return `<tr>
-    <td style="padding:10px 0;color:#71717a;font-size:14px;width:38%;border-bottom:1px solid #f4f4f5;vertical-align:top;">${label}</td>
-    <td style="padding:10px 0;color:#09090b;font-size:14px;font-weight:600;border-bottom:1px solid #f4f4f5;">${value}</td>
+    <td style="padding:10px 0;color:#71717a;font-size:14px;width:38%;border-bottom:1px solid #f4f4f5;vertical-align:top;">${esc(label)}</td>
+    <td style="padding:10px 0;color:#09090b;font-size:14px;font-weight:600;border-bottom:1px solid #f4f4f5;">${esc(value)}</td>
   </tr>`;
 }
 
@@ -50,6 +59,7 @@ export function buildAppointmentEmail(p: AppointmentEmailParams): {
   subject: string;
   html: string;
 } {
+  // Subjects are plain text (not HTML) — no escaping needed
   const subjects: Record<EmailType, string> = {
     booking_received: `Agendamento recebido — ${p.serviceName} em ${p.establishmentName}`,
     booking_confirmed: `Agendamento confirmado ✓ — ${p.serviceName} em ${p.establishmentName}`,
@@ -68,14 +78,14 @@ export function buildAppointmentEmail(p: AppointmentEmailParams): {
     booking_received: "Agendamento recebido!",
     booking_confirmed: "Agendamento confirmado!",
     booking_cancelled: "Agendamento cancelado",
-    owner_new_booking: `Novo agendamento de ${p.clientName}`,
+    owner_new_booking: `Novo agendamento de ${esc(p.clientName)}`,
   };
 
   const bodies: Record<EmailType, string> = {
-    booking_received: `Seu agendamento em <strong>${p.establishmentName}</strong> foi recebido com sucesso e está aguardando confirmação da equipe.`,
-    booking_confirmed: `Ótimas notícias! Seu agendamento em <strong>${p.establishmentName}</strong> foi confirmado. Nos vemos em breve!`,
-    booking_cancelled: `Infelizmente seu agendamento em <strong>${p.establishmentName}</strong> foi cancelado. Entre em contato com o estabelecimento para mais informações.`,
-    owner_new_booking: `<strong>${p.clientName}</strong> acabou de fazer um agendamento. Confira os detalhes abaixo.`,
+    booking_received: `Seu agendamento em <strong>${esc(p.establishmentName)}</strong> foi recebido com sucesso e está aguardando confirmação da equipe.`,
+    booking_confirmed: `Ótimas notícias! Seu agendamento em <strong>${esc(p.establishmentName)}</strong> foi confirmado. Nos vemos em breve!`,
+    booking_cancelled: `Infelizmente seu agendamento em <strong>${esc(p.establishmentName)}</strong> foi cancelado. Entre em contato com o estabelecimento para mais informações.`,
+    owner_new_booking: `<strong>${esc(p.clientName)}</strong> acabou de fazer um agendamento. Confira os detalhes abaixo.`,
   };
 
   const badge = badges[p.type];
@@ -155,7 +165,7 @@ export function buildAppointmentEmail(p: AppointmentEmailParams): {
       <tr>
         <td style="background:#fafafa;border-top:1px solid #f4f4f5;padding:18px 32px;text-align:center;">
           <p style="margin:0;font-size:12px;color:#a1a1aa;">
-            Este e-mail foi enviado pelo <strong>Agendaê</strong> em nome de ${p.establishmentName}.
+            Este e-mail foi enviado pelo <strong>Agendaê</strong> em nome de ${esc(p.establishmentName)}.
           </p>
         </td>
       </tr>

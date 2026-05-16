@@ -37,6 +37,12 @@ export function EstablishmentImagesUpload({
     setUploading: (v: boolean) => void,
     setUrl: (url: string) => void
   ) {
+    const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!ALLOWED_EXT.has(ext)) {
+      setError("Formato não permitido. Use JPG, PNG, WebP ou GIF.");
+      return;
+    }
     if (file.size > 5 * 1024 * 1024) {
       setError("Imagem deve ter no máximo 5MB");
       return;

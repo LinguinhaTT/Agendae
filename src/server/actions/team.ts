@@ -210,6 +210,12 @@ export async function saveAvailabilityRules(
 
 // ─── Time off ─────────────────────────────────────────────────────────────────
 
+const timeOffSchema = z.object({
+  starts_at: z.string().datetime("Data de início inválida"),
+  ends_at: z.string().datetime("Data de fim inválida"),
+  reason: z.string().max(200).optional(),
+});
+
 export async function createTimeOff(
   professionalId: string,
   input: { starts_at: string; ends_at: string; reason?: string }
@@ -225,11 +231,17 @@ export async function createTimeOff(
 
   if (!member) return { ok: false, error: "Membro não encontrado." };
 
+  const parsed = timeOffSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  if (parsed.data.ends_at <= parsed.data.starts_at)
+    return { ok: false, error: "Data de fim deve ser após a data de início." };
+
   const { error } = await supabase.from("time_off").insert({
     professional_id: professionalId,
-    starts_at: input.starts_at,
-    ends_at: input.ends_at,
-    reason: input.reason || null,
+    starts_at: parsed.data.starts_at,
+    ends_at: parsed.data.ends_at,
+    reason: parsed.data.reason || null,
   });
 
   if (error) return { ok: false, error: error.message };

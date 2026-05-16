@@ -21,6 +21,12 @@ export function AvatarUpload({ memberId, currentUrl, displayName }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!ALLOWED_EXT.has(ext)) {
+      setError("Formato não permitido. Use JPG, PNG, WebP ou GIF.");
+      return;
+    }
     if (file.size > 2 * 1024 * 1024) {
       setError("Imagem deve ter no máximo 2 MB.");
       return;
@@ -31,7 +37,6 @@ export function AvatarUpload({ memberId, currentUrl, displayName }: Props) {
 
     try {
       const supabase = createClient();
-      const ext = file.name.split(".").pop();
       const path = `${memberId}/avatar.${ext}`;
 
       const { error: uploadError } = await supabase.storage

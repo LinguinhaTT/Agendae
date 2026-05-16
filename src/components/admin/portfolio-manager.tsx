@@ -40,12 +40,17 @@ export function PortfolioManager({ establishmentId, initialItems }: Props) {
     setError(null);
     setUploading(true);
 
+    const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
     for (const file of files) {
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+      if (!ALLOWED_EXT.has(ext)) {
+        setError(`${file.name}: formato não permitido. Use JPG, PNG, WebP ou GIF.`);
+        continue;
+      }
       if (file.size > 10 * 1024 * 1024) {
         setError(`${file.name} excede 10MB`);
         continue;
       }
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
       const path = `${establishmentId}/portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
       const { error: upErr, data } = await supabase.storage
