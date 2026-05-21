@@ -275,7 +275,7 @@ const STORY = [
     sub: "+35% de receita no primeiro mês. Sem faltas, sem buraco na agenda.",
   },
 ];
-const INTRO_SCENE_MS = 2500;
+const INTRO_SCENE_MS = 3200;
 
 // ─── Demo Scenes ──────────────────────────────────────────────────────────────
 
